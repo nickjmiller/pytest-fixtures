@@ -18,7 +18,12 @@ const isPythonTestFile = (document: vscode.TextDocument) => {
 
 export class PytestFixtureCompletionItemProvider
 implements vscode.CompletionItemProvider {
-    private CACHE: { [Key: string]: Fixture[] } = {};
+    private cache: { [Key: string]: Fixture[] } = {};
+
+    /**
+     * Passing the context lets the provider set up its listeners.
+     * @param context 
+     */
     constructor(context: vscode.ExtensionContext) {
         vscode.workspace.textDocuments.forEach((document) => this.cacheFixtures(document));
         context.subscriptions.push(
@@ -34,26 +39,39 @@ implements vscode.CompletionItemProvider {
         );
     }
 
-    cacheFixtures = (document: vscode.TextDocument) => {
+    private cacheFixtures = (document: vscode.TextDocument) => {
         if (isPythonTestFile(document)) {
             const filePath = document.uri.fsPath;
-            this.CACHE[filePath] = getFixtures(filePath);
+            this.cache[filePath] = getFixtures(filePath);
         }
     };
 
-    shouldOfferSuggestions = (
-        testPath: string,
-        lineText: string,
-        cursorPosition: number
-    ): boolean => {
-        if (lineText.startsWith("def test_") && this.CACHE[testPath]?.length) {
+    /**
+     * Get suggestions for the given cursor position in a document.
+     * If the cursor is within the parameter section of a test function, in
+     * a file with cached fixtures, provide results.
+     * 
+     * @param document current document
+     * @param position current cursor position
+     * @returns list of fixtures or an empty list
+     */
+    private getSuggestions = (
+        document: vscode.TextDocument,
+        position: vscode.Position,
+    ): Fixture[] => {
+        const lineText = document.lineAt(position.line).text;
+        const testPath = document.uri.fsPath;
+        const cursorPosition = position.character;
+        if (lineText.startsWith("def test_") && this.cache[testPath]?.length) {
             const lineTextBeforePosition = lineText.slice(0, cursorPosition);
-            return (
+            if (
                 lineTextBeforePosition.includes("(") &&
                 !lineTextBeforePosition.includes(")")
-            );
+            ) {
+                return this.cache[testPath];
+            }
         }
-        return false;
+        return [];
     };
 
     provideCompletionItems(
@@ -62,10 +80,9 @@ implements vscode.CompletionItemProvider {
         _token: vscode.CancellationToken,
         _context: vscode.CompletionContext
     ): vscode.CompletionItem[] {
-        let lineText = document.lineAt(position.line).text;
-        const testPath = document.uri.fsPath;
-        if (this.shouldOfferSuggestions(testPath, lineText, position.character)) {
-            return this.CACHE[testPath].map((fixture) => {
+        const suggestions = this.getSuggestions(document, position);
+        if (suggestions.length) {
+            return suggestions.map((fixture) => {
                 let item = new vscode.CompletionItem(
                     fixture.name,
                     vscode.CompletionItemKind.Field
