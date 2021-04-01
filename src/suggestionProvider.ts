@@ -25,7 +25,16 @@ implements vscode.CompletionItemProvider {
      * @param context 
      */
     constructor(context: vscode.ExtensionContext) {
-        vscode.workspace.textDocuments.forEach((document) => this.cacheFixtures(document));
+        if (vscode.window.activeTextEditor) {
+            this.cacheFixtures(vscode.window.activeTextEditor.document);
+        }
+        context.subscriptions.push(
+            vscode.window.onDidChangeActiveTextEditor(editor => {
+                if (editor) {
+                    this.cacheFixtures(editor.document);
+                }
+            })
+        );
         context.subscriptions.push(
             vscode.workspace.onDidChangeTextDocument(event => {
                 this.cacheFixtures(event.document);
@@ -42,7 +51,7 @@ implements vscode.CompletionItemProvider {
     private cacheFixtures = (document: vscode.TextDocument) => {
         if (isPythonTestFile(document)) {
             const filePath = document.uri.fsPath;
-            this.cache[filePath] = getFixtures(filePath);
+            this.cache[filePath] = getFixtures(document);
         }
     };
 

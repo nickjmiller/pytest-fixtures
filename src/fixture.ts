@@ -1,3 +1,4 @@
+import * as vscode from "vscode";
 import { spawnSync } from "child_process";
 
 export interface Fixture {
@@ -61,10 +62,12 @@ const parsePytestOutputToFixtures = (output: string) => {
  * hierarchy and context. We use the current python interpreter to
  * call pytest --fixtures for each file and record the responses.
  * 
- * @param filepath
+ * @param document
  * @returns list of fixtures prepared for the file
  */
-export const getFixtures = (filepath: string) => {
-    const response = spawnSync("python", ["-m", "pytest", "--fixtures", filepath]);
+export const getFixtures = (document: vscode.TextDocument) => {
+    const filepath = document.uri.fsPath;
+    const pythonPath: string = vscode.workspace.getConfiguration("python", document.uri).get("pythonPath") || "python";
+    const response = spawnSync(pythonPath, ["-m", "pytest", "--fixtures", filepath]);
     return parsePytestOutputToFixtures(response.stdout.toString());
 };
