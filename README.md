@@ -12,15 +12,14 @@ Autocomplete suggestions for parameters of test functions where fixtures may be 
 
 ## Requirements
 
+* Python interpretter
 * pytest
 
 
 ## Known Issues
 
-Very much alpha, plently of bugs I'm sure.
+* Only supports autocomplete, so once the parameter is written it has no type/intellisense
 
 ## Release Notes
 
-### 0.1.0
-
-Initial release of the extension with basic support.
+[Change Log](CHANGELOG.md)
