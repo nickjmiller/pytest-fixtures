@@ -8,7 +8,7 @@ export const PYTHON: vscode.DocumentFilter = {
 };
 
 const isPythonTestFile = (document: vscode.TextDocument) => {
-    if (!(document.languageId === PYTHON.language)) {
+    if (!(document.languageId === PYTHON.language && document.uri.scheme === PYTHON.scheme)) {
         return false;
     }
     const file = path.parse(document.fileName).base;
@@ -36,8 +36,12 @@ implements vscode.CompletionItemProvider {
             })
         );
         context.subscriptions.push(
-            vscode.workspace.onDidChangeTextDocument(event => {
-                this.cacheFixtures(event.document);
+            vscode.workspace.onDidSaveTextDocument(document => {
+                const filePath = document.uri.fsPath;
+                // Only look at files that have already been seen.
+                if (this.cache[filePath]) {
+                    this.cacheFixtures(document);
+                }
             })
         );
         context.subscriptions.push(
