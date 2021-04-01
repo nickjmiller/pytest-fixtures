@@ -9,7 +9,7 @@
   "publisher": "nickmillerdev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nickjmiller/pytest-fixtures/pytest-vscode.git"
+    "url": "https://github.com/nickjmiller/pytest-fixtures"
   },
   "bugs": {
     "url": "https://github.com/nickjmiller/pytest-fixtures/issues"
