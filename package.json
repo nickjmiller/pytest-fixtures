@@ -27,7 +27,6 @@
     "onLanguage:python"
   ],
   "main": "./dist/extension.js",
-  "preview": true,
   "contributes": {},
   "scripts": {
     "vscode:prepublish": "npm run package",
