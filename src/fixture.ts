@@ -46,7 +46,7 @@ const parsePytestOutputToFixtures = (output: string) => {
                 fixtures.push(fixture);
             }
             fixture = {
-                name: line.split(" ")[0],
+                name: line.split(" ")[0].trim(),
                 docstring: "",
             };
         }
