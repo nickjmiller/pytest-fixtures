@@ -12,3 +12,11 @@
 
 * Add icon
 * Support more characters in fixture name
+
+## [0.1.5]
+
+* Fix newline issue with parameters on windows
+
+## [0.1.6]
+
+* Bumping version to test workflow
