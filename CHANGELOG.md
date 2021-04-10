@@ -20,3 +20,12 @@
 ## [0.1.6]
 
 * Bumping version to test workflow
+
+## [0.1.6]
+
+* Add check for custom pytest path
+
+## [0.1.8]
+
+* Updated README
+
