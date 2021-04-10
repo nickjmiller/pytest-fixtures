@@ -4,3 +4,5 @@ node_modules
 .*
 !.vscode
 **/__pycache__
+test-fixture/**
+!test-fixture/*.py

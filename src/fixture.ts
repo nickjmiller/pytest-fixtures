@@ -66,8 +66,18 @@ const parsePytestOutputToFixtures = (output: string) => {
  * @returns list of fixtures prepared for the file
  */
 export const getFixtures = (document: vscode.TextDocument) => {
-    const filepath = document.uri.fsPath;
-    const pythonPath: string = vscode.workspace.getConfiguration("python", document.uri).get("pythonPath") || "python";
-    const response = spawnSync(pythonPath, ["-m", "pytest", "--fixtures", filepath]);
+    let response;
+    const args = ["--fixtures", document.uri.fsPath];
+    const pytestPath: string  = vscode.workspace
+        .getConfiguration("python.testing", document.uri)
+        .get("pytestPath") || "pytest";
+    if (pytestPath === "pytest") {
+        const pythonPath: string = vscode.workspace
+            .getConfiguration("python", document.uri)
+            .get("pythonPath") || "python";
+        response = spawnSync(pythonPath, ["-m", "pytest", ...args]);
+    } else {
+        response = spawnSync(pytestPath, args, {shell: true});
+    }
     return parsePytestOutputToFixtures(response.stdout.toString());
 };
