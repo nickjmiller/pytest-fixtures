@@ -29,3 +29,7 @@
 
 * Updated README
 
+## [0.1.9]
+
+* Provide support for fixtures using fixtures
+

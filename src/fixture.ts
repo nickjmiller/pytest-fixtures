@@ -11,7 +11,7 @@ export interface Fixture {
  * Assumes that all fixtures lie between two lines of `===...`.
  * 
  * @param lines input lines from pytest --fixtures
- * @returns lines without preceeding or following pytest info
+ * @returns lines without preceding or following pytest info
  */
 const removeTrailingPytestInfo = (lines: string[]) => {
     const firstFixture = lines.findIndex(line => line === "" || line.startsWith("    ")) - 1;
@@ -68,7 +68,7 @@ const parsePytestOutputToFixtures = (output: string) => {
 export const getFixtures = (document: vscode.TextDocument) => {
     let response;
     const args = ["--fixtures", document.uri.fsPath];
-    const pytestPath: string  = vscode.workspace
+    const pytestPath: string = vscode.workspace
         .getConfiguration("python.testing", document.uri)
         .get("pytestPath") || "pytest";
     if (pytestPath === "pytest") {
@@ -77,7 +77,7 @@ export const getFixtures = (document: vscode.TextDocument) => {
             .get("pythonPath") || "python";
         response = spawnSync(pythonPath, ["-m", "pytest", ...args]);
     } else {
-        response = spawnSync(pytestPath, args, {shell: true});
+        response = spawnSync(pytestPath, args, { shell: true });
     }
     return parsePytestOutputToFixtures(response.stdout.toString());
 };

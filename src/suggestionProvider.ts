@@ -16,8 +16,42 @@ const isPythonTestFile = (document: vscode.TextDocument) => {
 };
 
 
-export class PytestFixtureCompletionItemProvider
-implements vscode.CompletionItemProvider {
+/**
+ * Check if a line can use fixture suggestions. Returns true if the line is a test function
+ * or if the line is a pytest fixture.
+ * 
+ * @param document 
+ * @param lineText 
+ * @param lineNumber 
+ * @returns true if the current line is a function definition that can use fixtures
+ */
+const lineCanUseFixtureSuggestions = (document: vscode.TextDocument, lineText: string,
+    lineNumber: number): boolean => {
+    // Exit early if we know it's a test function
+    if (lineText.startsWith("def test_")) {
+        return true;
+    }
+    let isFixtureFunction = false;
+    if (lineNumber > 0) {
+        const previousLine = document.lineAt(lineNumber - 1).text;
+        isFixtureFunction = previousLine.startsWith("@pytest.fixture") && lineText.startsWith("def ");
+    }
+    return isFixtureFunction;
+};
+
+/**
+ * Simple function to get the text between "def " and "(".
+ *
+ * @param lineText line containing function definition
+ * @returns function name
+ */
+const getFunctionName = (lineText: string): string => {
+    const indexOfParens = lineText.indexOf("(");
+    return lineText.slice(4, indexOfParens); // 4 for "def "
+};
+
+
+export class PytestFixtureCompletionItemProvider implements vscode.CompletionItemProvider {
     private cache: { [Key: string]: Fixture[] } = {};
 
     /**
@@ -75,13 +109,17 @@ implements vscode.CompletionItemProvider {
         const lineText = document.lineAt(position.line).text;
         const testPath = document.uri.fsPath;
         const cursorPosition = position.character;
-        if (lineText.startsWith("def test_") && this.cache[testPath]?.length) {
+
+        if (lineCanUseFixtureSuggestions(document, lineText, position.line)
+            && this.cache[testPath]?.length) {
             const lineTextBeforePosition = lineText.slice(0, cursorPosition);
             if (
                 lineTextBeforePosition.includes("(") &&
                 !lineTextBeforePosition.includes(")")
             ) {
-                return this.cache[testPath];
+                const functionName = getFunctionName(lineText);
+                // Avoid self-reference for fixtures
+                return this.cache[testPath].filter((fixture) => fixture.name !== functionName);
             }
         }
         return [];
