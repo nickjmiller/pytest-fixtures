@@ -25,7 +25,7 @@ jobs:
       with:
         node-version: 12.x
     - run: npm install
-    - run: xvfb-run -a npm run test
+    - run: xvfb-run -a npm run pretest
       if: runner.os == 'Linux'
-    - run: npm run test
+    - run: npm run pretest
       if: runner.os != 'Linux'
