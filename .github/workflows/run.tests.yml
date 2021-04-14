@@ -7,7 +7,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [ubuntu-latest] # Add back other OS options after fix
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout
@@ -17,7 +17,7 @@ jobs:
       with:
         node-version: 12.x
     - run: npm install
-    - run: xvfb-run -a npm test
+    - run: xvfb-run -a npm run pretest
       if: runner.os == 'Linux'
-    - run: npm test
+    - run: npm run pretest
       if: runner.os != 'Linux'
