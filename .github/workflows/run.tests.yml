@@ -12,12 +12,20 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Install pytest
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest
     - name: Install Node.js
       uses: actions/setup-node@v1
       with:
         node-version: 12.x
     - run: npm install
-    - run: xvfb-run -a npm run pretest
+    - run: xvfb-run -a npm run test
       if: runner.os == 'Linux'
-    - run: npm run pretest
+    - run: npm run test
       if: runner.os != 'Linux'
