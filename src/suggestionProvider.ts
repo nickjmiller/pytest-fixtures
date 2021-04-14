@@ -52,7 +52,7 @@ const getFunctionName = (lineText: string): string => {
 
 
 export class PytestFixtureCompletionItemProvider implements vscode.CompletionItemProvider {
-    private cache: { [Key: string]: Fixture[] } = {};
+    readonly cache: { [Key: string]: Fixture[] } = {};
 
     /**
      * Passing the context lets the provider set up its listeners.
