@@ -40,6 +40,20 @@ const lineCanUseFixtureSuggestions = (document: vscode.TextDocument, lineText: s
 };
 
 /**
+ * Check if a line can use fixture definition. Returns true if the line is a test function
+ * or if the line is a pytest fixture.
+ * 
+ * @param document 
+ * @param lineText 
+ * @param lineNumber 
+ * @returns true if the current line is a function definition that can use fixtures
+ */
+const lineCanUseFixtureDefinition = (lineText: string): boolean => {
+    // TODO improve
+    return lineText.startsWith("def test_");
+};
+
+/**
  * Simple function to get the text between "def " and "(".
  *
  * @param lineText line containing function definition
@@ -51,7 +65,7 @@ const getFunctionName = (lineText: string): string => {
 };
 
 
-export class PytestFixtureCompletionItemProvider implements vscode.CompletionItemProvider {
+export class PytestFixtureCompletionItemProvider implements vscode.CompletionItemProvider, vscode.DefinitionProvider {
     readonly cache: { [Key: string]: Fixture[] } = {};
 
     /**
@@ -62,14 +76,15 @@ export class PytestFixtureCompletionItemProvider implements vscode.CompletionIte
         if (vscode.window.activeTextEditor) {
             this.cacheFixtures(vscode.window.activeTextEditor.document);
         }
-        context.subscriptions.push(
+        const subs = [];
+        subs.push(
             vscode.window.onDidChangeActiveTextEditor(editor => {
                 if (editor) {
                     this.cacheFixtures(editor.document);
                 }
             })
         );
-        context.subscriptions.push(
+        subs.push(
             vscode.workspace.onDidSaveTextDocument(document => {
                 const filePath = document.uri.fsPath;
                 // Only look at files that have already been seen.
@@ -78,12 +93,20 @@ export class PytestFixtureCompletionItemProvider implements vscode.CompletionIte
                 }
             })
         );
-        context.subscriptions.push(
+        subs.push(
             vscode.languages.registerCompletionItemProvider(
                 PYTHON,
                 this
             )
         );
+        subs.push(
+            vscode.languages.registerDefinitionProvider(
+                PYTHON,
+                this
+            )
+        );
+
+        context.subscriptions.push(...subs);
     }
 
     private cacheFixtures = (document: vscode.TextDocument) => {
@@ -145,6 +168,25 @@ export class PytestFixtureCompletionItemProvider implements vscode.CompletionIte
                 }
                 return item;
             });
+        }
+        return [];
+    }
+
+    provideDefinition(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.Definition | vscode.LocationLink[]> {
+        const lineText = document.lineAt(position.line).text;
+
+        if(lineCanUseFixtureDefinition(lineText)){
+            const range = document.getWordRangeAtPosition(position);
+            const word = document.getText(range);
+            const fixtures = this.cache[document.uri.fsPath];
+            const fixture = fixtures.find(f=> f.name === word);
+            if(fixture?.fileLocation && fixture?.range)
+            {
+                return new vscode.Location(
+                    fixture.fileLocation,
+                    fixture.range
+                );
+            }
         }
         return [];
     }

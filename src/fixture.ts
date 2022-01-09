@@ -1,9 +1,14 @@
 import * as vscode from "vscode";
+import {join} from "path";
 import { spawnSync } from "child_process";
+import { readFileSync } from "fs";
+import { EOL } from "os";
 
 export interface Fixture {
     name: string;
     docstring: string;
+    fileLocation?: vscode.Uri;
+    range?: vscode.Range;
 }
 
 /**
@@ -30,29 +35,61 @@ const removeTrailingPytestInfo = (lines: string[]) => {
  * @param output pytest --fixtures output
  * @returns list of fixtures parsed from output
  */
-const parsePytestOutputToFixtures = (output: string) => {
+const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
     const fixtures: Fixture[] = [];
     let lines = removeTrailingPytestInfo(output.split("\n"));
+    let currentLocation: vscode.Uri | null = null;
+    let content: string[] | null = null;
+    let alreadyEncountered: Record<string, number> = {};
+
     let fixture: Fixture = {
         name: "",
         docstring: "",
     };
+
+    function append(fixture: Fixture) {
+        let index = alreadyEncountered[fixture.name] ?? -1;
+        if(index >= 0)
+        {fixtures[index] = fixture;}
+        else{
+            fixtures.push(fixture);
+            alreadyEncountered[fixture.name] = fixtures.length - 1;
+        }
+    }
+
     lines.forEach(line => {
         // Two spaces means docstring or error, pytest includes no docstring errors if there are no docstrings
         if (line.startsWith("  ") && !line.includes("no docstring")) {
             fixture.docstring += `\n${line}`;
         } else if (line.match(/^[\w]/i)) { // If the line starts with a letter or a number, we assume fixture
             if (fixture.name) {
-                fixtures.push(fixture);
+                append(fixture);
             }
             fixture = {
                 name: line.split(" ")[0].trim(),
                 docstring: "",
-            };
+            } as Fixture;
+
+            if(currentLocation && content) {
+                fixture.fileLocation = currentLocation;
+                const line = content.findIndex(line => line.includes("def " + fixture.name + "("));
+                const start = content[line].indexOf("def " + fixture.name + "(") + 4;
+                const end = start + fixture.name.length;
+                fixture.range = new vscode.Range(
+                    new vscode.Position(line, start),
+                    new vscode.Position(line, end)
+                );
+            }
+
+        } else if(line.startsWith("--")) {
+            const match = /^-+ fixtures defined from (.+) -+$/.exec(line);
+            const path = match?.[1].split(".").join("/") + ".py";
+            currentLocation = vscode.Uri.file(join(rootDir, path));
+            content = readFileSync(currentLocation.fsPath).toString().split(EOL);
         }
     });
     if (fixture.name) {
-        fixtures.push(fixture);
+        append(fixture);
     }
     return fixtures;
 };
@@ -79,5 +116,10 @@ export const getFixtures = (document: vscode.TextDocument) => {
     } else {
         response = spawnSync(pytestPath, args, { shell: true });
     }
-    return parsePytestOutputToFixtures(response.stdout.toString());
+    const rootDir = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if(!rootDir)
+    {
+        throw new Error("No workspace folder found");
+    }
+    return parsePytestOutputToFixtures(response.stdout.toString(), rootDir);
 };

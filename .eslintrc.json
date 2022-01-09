@@ -14,5 +14,5 @@
     "semi": "error",
     "quotes": ["error", "double"]
   },
-  "ignorePatterns": ["**/*.d.ts"]
+  "ignorePatterns": ["**/*.d.ts", "dist/**/*.js"]
 }
