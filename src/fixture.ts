@@ -1,8 +1,9 @@
-import * as vscode from "vscode";
-import * as path from "path";
 import { spawnSync } from "child_process";
 import { readFileSync } from "fs";
 import { EOL } from "os";
+import { join } from "path";
+import * as vscode from "vscode";
+import { log } from "./logging";
 
 export interface Fixture {
     name: string;
@@ -39,8 +40,8 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
     const fixtures: Fixture[] = [];
     let lines = removeTrailingPytestInfo(output.split("\n"));
     let alreadyEncountered: Record<string, number> = {};
-    let tmpContent : string[] | null = null;
-    let currentFilePath :string|null=null;
+    let tmpContent: string[] | null = null;
+    let currentFilePath: string|null = null;
 
     let fixture: Fixture = {
         name: "",
@@ -69,18 +70,15 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
                 append(fixture);
             }
             const [name, linePath, line] = matches.slice(1);
-            fixture = {
-                name,
-                docstring: "",
-            } as Fixture;
+            fixture = { name, docstring: "" };
 
             if(linePath !== currentFilePath)
             {
                 currentFilePath = linePath;
-                tmpContent = readFileSync(path.join(rootDir, linePath), "utf8").split(EOL);
+                tmpContent = readFileSync(join(rootDir, linePath), "utf8").split(EOL);
             }
 
-            fixture.fileLocation = vscode.Uri.file(path.join(rootDir, linePath));
+            fixture.fileLocation = vscode.Uri.file(join(rootDir, linePath));
             const lineInt = parseInt(line, 10) - 1;
             const start = tmpContent![lineInt].indexOf(`def ${fixture.name}(`) + 4;
             const end = start + fixture.name.length;
@@ -93,6 +91,7 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
     if (fixture.name) {
         append(fixture);
     }
+    log(`Found ${fixtures.length} fixtures`);
     return fixtures;
 };
 
@@ -119,8 +118,11 @@ export const getFixtures = (document: vscode.TextDocument) => {
         const pythonPath: string = vscode.workspace
             .getConfiguration("python", document.uri)
             .get("pythonPath") || "python";
+
+        log(`Running command ${pythonPath} -m pytest ${args.join(" ")} in directory ${cwd}`);
         response = spawnSync(pythonPath, ["-m", "pytest", ...args], { cwd });
     } else {
+        log(`Running command ${pytestPath} -m pytest ${args.join(" ")} in directory ${cwd}`);
         response = spawnSync(pytestPath, args, { shell: true, cwd });
     }
     

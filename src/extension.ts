@@ -1,12 +1,15 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import { PytestFixtureCompletionItemProvider } from "./suggestionProvider";
+import { PytestFixtureProvider } from "./suggestionProvider";
+
+const provider = new PytestFixtureProvider();
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-    new PytestFixtureCompletionItemProvider(context);
+    provider.activate(context);
+    return { provider };
 }
 
 // this method is called when your extension is deactivated
