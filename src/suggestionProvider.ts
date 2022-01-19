@@ -26,8 +26,7 @@ const isPythonTestFile = (document: vscode.TextDocument) => {
  * @param lineNumber 
  * @returns true if the current line is a function definition that can use fixtures
  */
-const lineCanUseFixtureSuggestions = (document: vscode.TextDocument, lineText: string,
-    lineNumber: number): boolean => {
+const lineCanUseFixtureSuggestions = (document: vscode.TextDocument, lineText: string, lineNumber: number): boolean => {
     // Exit early if we know it's a test function
     if (lineText.startsWith("def test_")) {
         return true;
@@ -35,23 +34,11 @@ const lineCanUseFixtureSuggestions = (document: vscode.TextDocument, lineText: s
     let isFixtureFunction = false;
     if (lineNumber > 0) {
         const previousLine = document.lineAt(lineNumber - 1).text;
+        // TODO this should be improved because @pytest.fixture can be way above than the previous line
+        // for example in fixtures with parameters        
         isFixtureFunction = previousLine.startsWith("@pytest.fixture") && lineText.startsWith("def ");
     }
     return isFixtureFunction;
-};
-
-/**
- * Check if a line can use fixture definition. Returns true if the line is a test function
- * or if the line is a pytest fixture.
- * 
- * @param document 
- * @param lineText 
- * @param lineNumber 
- * @returns true if the current line is a function definition that can use fixtures
- */
-const lineCanUseFixtureDefinition = (lineText: string): boolean => {
-    // TODO improve
-    return lineText.startsWith("def test_");
 };
 
 /**
@@ -178,7 +165,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
 
         const lineText = document.lineAt(position.line).text;
 
-        if(lineCanUseFixtureDefinition(lineText)){
+        if(lineCanUseFixtureSuggestions(document, lineText, position.line)){
             const range = document.getWordRangeAtPosition(position);
             const word = document.getText(range);
             const fixtures = this.cache[document.uri.fsPath];

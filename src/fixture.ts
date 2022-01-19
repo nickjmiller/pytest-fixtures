@@ -1,7 +1,6 @@
 import { spawnSync } from "child_process";
 import { readFileSync } from "fs";
-import { EOL } from "os";
-import { join } from "path";
+import { dirname, join } from "path";
 import * as vscode from "vscode";
 import { log } from "./logging";
 
@@ -41,7 +40,7 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
     let lines = removeTrailingPytestInfo(output.split("\n"));
     let alreadyEncountered: Record<string, number> = {};
     let tmpContent: string[] | null = null;
-    let currentFilePath: string|null = null;
+    let currentFilePath: string | null = null;
 
     let fixture: Fixture = {
         name: "",
@@ -65,7 +64,7 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
         // Two spaces means docstring or error, pytest includes no docstring errors if there are no docstrings
         if (line.startsWith("  ") && !line.includes("no docstring")) {
             fixture.docstring += `\n${line}`;
-        } else if (matches = line.match(/^(\w+) -- ([^:]+):(\d+)$/i)) { // If the line starts with a letter or a number, we assume fixture
+        } else if (matches = line.match(/^(\w+) -- ([^:]+):(\d+)/i)) { // If the line starts with a letter or a number, we assume fixture
             if (fixture.name) {
                 append(fixture);
             }
@@ -75,17 +74,19 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
             if(linePath !== currentFilePath)
             {
                 currentFilePath = linePath;
-                tmpContent = readFileSync(join(rootDir, linePath), "utf8").split(EOL);
+                tmpContent = readFileSync(join(rootDir, linePath), "utf8").split(/\r?\n/);
             }
 
             fixture.fileLocation = vscode.Uri.file(join(rootDir, linePath));
             const lineInt = parseInt(line, 10) - 1;
-            const start = tmpContent![lineInt].indexOf(`def ${fixture.name}(`) + 4;
-            const end = start + fixture.name.length;
-            fixture.range = new vscode.Range(
-                new vscode.Position(lineInt, start),
-                new vscode.Position(lineInt, end)
-            );
+            if(tmpContent && lineInt < tmpContent.length) {
+                const start = tmpContent[lineInt].indexOf(`def ${fixture.name}(`) + 4;
+                const end = start + fixture.name.length;
+                fixture.range = new vscode.Range(
+                    new vscode.Position(lineInt, start),
+                    new vscode.Position(lineInt, end)
+                );
+            }
         }
     });
     if (fixture.name) {
@@ -106,11 +107,7 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
 export const getFixtures = (document: vscode.TextDocument) => {
     let response;
     const args = ["--fixtures", "-v", document.uri.fsPath];
-    const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-    if(!cwd)
-    {
-        throw new Error("No workspace folder found");
-    }
+    const cwd = dirname(document.uri.fsPath);
     const pytestPath: string = vscode.workspace
         .getConfiguration("python.testing", document.uri)
         .get("pytestPath") || "pytest";
@@ -126,5 +123,9 @@ export const getFixtures = (document: vscode.TextDocument) => {
         response = spawnSync(pytestPath, args, { shell: true, cwd });
     }
     
+    if(response.error) {
+        log(`Error running pytest: ${response.error}`);
+        return [];
+    }
     return parsePytestOutputToFixtures(response.stdout.toString(), cwd);
 };
