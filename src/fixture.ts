@@ -1,9 +1,14 @@
-import * as vscode from "vscode";
 import { spawnSync } from "child_process";
+import { readFileSync } from "fs";
+import { dirname, join } from "path";
+import * as vscode from "vscode";
+import { log } from "./logging";
 
 export interface Fixture {
     name: string;
     docstring: string;
+    fileLocation?: vscode.Uri;
+    range?: vscode.Range;
 }
 
 /**
@@ -30,30 +35,64 @@ const removeTrailingPytestInfo = (lines: string[]) => {
  * @param output pytest --fixtures output
  * @returns list of fixtures parsed from output
  */
-const parsePytestOutputToFixtures = (output: string) => {
+const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
     const fixtures: Fixture[] = [];
     let lines = removeTrailingPytestInfo(output.split("\n"));
+    let alreadyEncountered: Record<string, number> = {};
+    let tmpContent: string[] | null = null;
+    let currentFilePath: string | null = null;
+
     let fixture: Fixture = {
         name: "",
         docstring: "",
     };
+
+    function append(fixture: Fixture) {
+        let index = alreadyEncountered[fixture.name] ?? -1;
+        if(index >= 0) {
+            fixtures[index] = fixture;
+        }
+        else {
+            fixtures.push(fixture);
+            alreadyEncountered[fixture.name] = fixtures.length - 1;
+        }
+    }
+
     lines.forEach(line => {
+        let matches;
+
         // Two spaces means docstring or error, pytest includes no docstring errors if there are no docstrings
         if (line.startsWith("  ") && !line.includes("no docstring")) {
             fixture.docstring += `\n${line}`;
-        } else if (line.match(/^[\w]/i)) { // If the line starts with a letter or a number, we assume fixture
+        } else if (matches = line.match(/^(\w+) -- ([^:]+):(\d+)/i)) { // If the line starts with a letter or a number, we assume fixture
             if (fixture.name) {
-                fixtures.push(fixture);
+                append(fixture);
             }
-            fixture = {
-                name: line.split(" ")[0].trim(),
-                docstring: "",
-            };
+            const [name, linePath, line] = matches.slice(1);
+            fixture = { name, docstring: "" };
+
+            if(linePath !== currentFilePath)
+            {
+                currentFilePath = linePath;
+                tmpContent = readFileSync(join(rootDir, linePath), "utf8").split(/\r?\n/);
+            }
+
+            fixture.fileLocation = vscode.Uri.file(join(rootDir, linePath));
+            const lineInt = parseInt(line, 10) - 1;
+            if(tmpContent && lineInt < tmpContent.length) {
+                const start = tmpContent[lineInt].indexOf(`def ${fixture.name}(`) + 4;
+                const end = start + fixture.name.length;
+                fixture.range = new vscode.Range(
+                    new vscode.Position(lineInt, start),
+                    new vscode.Position(lineInt, end)
+                );
+            }
         }
     });
     if (fixture.name) {
-        fixtures.push(fixture);
+        append(fixture);
     }
+    log(`Found ${fixtures.length} fixtures`);
     return fixtures;
 };
 
@@ -67,7 +106,8 @@ const parsePytestOutputToFixtures = (output: string) => {
  */
 export const getFixtures = (document: vscode.TextDocument) => {
     let response;
-    const args = ["--fixtures", document.uri.fsPath];
+    const args = ["--fixtures", "-v", document.uri.fsPath];
+    const cwd = dirname(document.uri.fsPath);
     const pytestPath: string = vscode.workspace
         .getConfiguration("python.testing", document.uri)
         .get("pytestPath") || "pytest";
@@ -75,9 +115,17 @@ export const getFixtures = (document: vscode.TextDocument) => {
         const pythonPath: string = vscode.workspace
             .getConfiguration("python", document.uri)
             .get("pythonPath") || "python";
-        response = spawnSync(pythonPath, ["-m", "pytest", ...args]);
+
+        log(`Running command ${pythonPath} -m pytest ${args.join(" ")} in directory ${cwd}`);
+        response = spawnSync(pythonPath, ["-m", "pytest", ...args], { cwd });
     } else {
-        response = spawnSync(pytestPath, args, { shell: true });
+        log(`Running command ${pytestPath} -m pytest ${args.join(" ")} in directory ${cwd}`);
+        response = spawnSync(pytestPath, args, { shell: true, cwd });
     }
-    return parsePytestOutputToFixtures(response.stdout.toString());
+    
+    if(response.error) {
+        log(`Error running pytest: ${response.error}`);
+        return [];
+    }
+    return parsePytestOutputToFixtures(response.stdout.toString(), cwd);
 };

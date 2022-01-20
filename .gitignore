@@ -5,5 +5,5 @@ node_modules
 !.vscode
 !.prettierrc
 **/__pycache__
-test-fixture/**
-!test-fixture/*.py
+**/.pytest_cache/
+test-fixture/.vscode/
