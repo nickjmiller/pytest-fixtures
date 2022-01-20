@@ -37,3 +37,8 @@
 
 * Add a better demo
 
+## [0.1.11]
+
+### New - Go To Definition Support - Thanks https://github.com/DavideCanton
+
+* Go to definition support is now enabled for fixtures. Press F12 to go to the definiton of the currently hovered fixture parameter.
