@@ -106,7 +106,7 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
  */
 export const getFixtures = (document: vscode.TextDocument) => {
     let response;
-    const args = ["--fixtures", "-v", document.uri.fsPath];
+    const args = ["--color", "no", "--fixtures", "-v", document.uri.fsPath];
     const cwd = dirname(document.uri.fsPath);
     const pytestPath: string = vscode.workspace
         .getConfiguration("python.testing", document.uri)
