@@ -150,9 +150,8 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
                     vscode.CompletionItemKind.Field
                 );
                 if (fixture.docstring) {
-                    item.documentation = new vscode.MarkdownString(
-                        fixture.docstring
-                    );
+                    // TODO: Clean up
+                    item.documentation = fixture.docstring;
                 }
                 return item;
             });

@@ -46,3 +46,7 @@
 ## [0.1.12]
 
 * Fixed bug with parsing caused by pytest --color settings, thanks https://github.com/andriykohut
+
+## [0.1.13]
+
+* Fix regressions with module scope and docstrings

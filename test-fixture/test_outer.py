@@ -1,6 +1,6 @@
 import pytest
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def local_outer_fixture():
     """Local outer fixture"""
 
