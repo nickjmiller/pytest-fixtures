@@ -64,7 +64,7 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
         // Two spaces means docstring or error, pytest includes no docstring errors if there are no docstrings
         if (line.startsWith("  ") && !line.includes("no docstring")) {
             fixture.docstring += `\n${line}`;
-        } else if (matches = line.match(/^([\w\[\] ]+) -- ([^:]+):(\d+)/i)) { // If the line starts with a letter or a number, we assume fixture
+        } else if (matches = line.match(/^(\w+)[ \[\]\w]* -- ([^:]+):(\d+)/i)) { // If the line starts with a letter or a number, we assume fixture
             if (fixture.name) {
                 append(fixture);
             }

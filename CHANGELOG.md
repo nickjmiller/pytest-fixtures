@@ -50,3 +50,7 @@
 ## [0.1.13]
 
 * Fix regressions with module scope and docstrings
+
+## [0.1.14]
+
+* Fix bad regex
