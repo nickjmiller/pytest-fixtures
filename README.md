@@ -22,6 +22,7 @@ Will first check `"python.testing.pytestPath"` for pytest, then will fallback on
 ## Known Issues
 
 * Does not support typing of fixture parameters.
+* Python extension provides a self-referential definition of function parameters so there will be two definitions, see [here](https://github.com/microsoft/vscode-python/issues/18536)
 
 ## Release Notes
 

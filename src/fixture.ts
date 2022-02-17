@@ -11,15 +11,17 @@ export interface Fixture {
     range?: vscode.Range;
 }
 
+const FIXTURE_REGEX = /^(\w+)[ \[\]\w]* -- ([^:]+):(\d+)/i;
+
 /**
  * Removes the pytest information from the list of fixtures.
- * Assumes that all fixtures lie between two lines of `===...`.
+ * Assumes that all fixtures come before a line of `===...`.
  * 
  * @param lines input lines from pytest --fixtures
  * @returns lines without preceding or following pytest info
  */
 const removeTrailingPytestInfo = (lines: string[]) => {
-    const firstFixture = lines.findIndex(line => line === "" || line.startsWith("    ")) - 1;
+    const firstFixture = lines.findIndex(line => line.match(FIXTURE_REGEX));
     lines = lines.slice(firstFixture);
     const lastFixture = lines.findIndex(line => line.startsWith("==="));
     return lines.slice(0, lastFixture);
@@ -37,10 +39,10 @@ const removeTrailingPytestInfo = (lines: string[]) => {
  */
 const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
     const fixtures: Fixture[] = [];
-    let lines = removeTrailingPytestInfo(output.split("\n"));
     let alreadyEncountered: Record<string, number> = {};
-    let tmpContent: string[] | null = null;
     let currentFilePath: string | null = null;
+    let lines = removeTrailingPytestInfo(output.split("\n"));
+    let tmpContent: string[] | null = null;
 
     let fixture: Fixture = {
         name: "",
@@ -61,31 +63,34 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
     lines.forEach(line => {
         let matches;
 
-        // Two spaces means docstring or error, pytest includes no docstring errors if there are no docstrings
-        if (line.startsWith("  ") && !line.includes("no docstring")) {
-            fixture.docstring += `\n${line}`;
-        } else if (matches = line.match(/^(\w+)[ \[\]\w]* -- ([^:]+):(\d+)/i)) { // If the line starts with a letter or a number, we assume fixture
+        // A space means docstring or a no-docstring error
+        if (line.startsWith(" ")) {
+            fixture.docstring += `${line}\n`;
+        } else if (matches = line.match(FIXTURE_REGEX)) { // If the line starts with a letter or a number, we assume fixture
             if (fixture.name) {
                 append(fixture);
             }
             const [name, linePath, line] = matches.slice(1);
             fixture = { name, docstring: "" };
 
-            if(linePath !== currentFilePath)
-            {
-                currentFilePath = linePath;
-                tmpContent = readFileSync(join(rootDir, linePath), "utf8").split(/\r?\n/);
-            }
-
-            fixture.fileLocation = vscode.Uri.file(join(rootDir, linePath));
-            const lineInt = parseInt(line, 10) - 1;
-            if(tmpContent && lineInt < tmpContent.length) {
-                const start = tmpContent[lineInt].indexOf(`def ${fixture.name}(`) + 4;
-                const end = start + fixture.name.length;
-                fixture.range = new vscode.Range(
-                    new vscode.Position(lineInt, start),
-                    new vscode.Position(lineInt, end)
-                );
+            const path = join(rootDir, linePath);
+            try {
+                if (linePath !== currentFilePath) {
+                    tmpContent = readFileSync(path, "utf8").split(/\r?\n/);
+                    currentFilePath = linePath;
+                }
+                fixture.fileLocation = vscode.Uri.file(path);
+                const lineInt = parseInt(line, 10) - 1;
+                if (tmpContent && lineInt < tmpContent.length) {
+                    const start = tmpContent[lineInt].indexOf(`def ${fixture.name}(`) + 4;
+                    const end = start + fixture.name.length;
+                    fixture.range = new vscode.Range(
+                        new vscode.Position(lineInt, start),
+                        new vscode.Position(lineInt, end)
+                    );
+                }
+            } catch {
+                log(`Unable to read file at path ${path}`);
             }
         }
     });

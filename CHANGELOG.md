@@ -54,3 +54,8 @@
 ## [0.1.14]
 
 * Fix bad regex
+
+## [0.1.15]
+
+* Additional regex improvements
+* Added exception handling in case definition support fails
