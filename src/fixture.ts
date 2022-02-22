@@ -41,7 +41,13 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
     const fixtures: Fixture[] = [];
     let alreadyEncountered: Record<string, number> = {};
     let currentFilePath: string | null = null;
-    let lines = removeTrailingPytestInfo(output.split("\n"));
+
+    let lines = output.split("\n");
+    const pytestRootDir = lines.find(line => line.startsWith("rootdir"))?.slice(9).trim();
+    lines = removeTrailingPytestInfo(lines);
+    // Use the rootdir defined by pytest if it's available
+    const rootDirForPath = pytestRootDir ? pytestRootDir : rootDir;
+
     let tmpContent: string[] | null = null;
 
     let fixture: Fixture = {
@@ -73,7 +79,7 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
             const [name, linePath, line] = matches.slice(1);
             fixture = { name, docstring: "" };
 
-            const path = join(rootDir, linePath);
+            const path = join(rootDirForPath, linePath);
             try {
                 if (linePath !== currentFilePath) {
                     tmpContent = readFileSync(path, "utf8").split(/\r?\n/);
@@ -89,8 +95,8 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
                         new vscode.Position(lineInt, end)
                     );
                 }
-            } catch {
-                log(`Unable to read file at path ${path}`);
+            } catch (error) {
+                log(`Unable to read file at path ${path}, ${error}`);
             }
         }
     });

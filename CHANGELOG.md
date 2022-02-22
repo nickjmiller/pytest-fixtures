@@ -59,3 +59,7 @@
 
 * Additional regex improvements
 * Added exception handling in case definition support fails
+
+## [0.1.16]
+
+* Use the rootdir from the pytest output to determine the fixture location if available
