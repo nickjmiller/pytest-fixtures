@@ -1,6 +1,6 @@
 import { spawnSync } from "child_process";
 import { readFileSync } from "fs";
-import { dirname, join } from "path";
+import { dirname, join, isAbsolute } from "path";
 import * as vscode from "vscode";
 import { log } from "./logging";
 
@@ -43,7 +43,7 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
     let currentFilePath: string | null = null;
 
     let lines = output.split("\n");
-    const pytestRootDir = lines.find(line => line.startsWith("rootdir"))?.slice(9).trim();
+    const pytestRootDir = lines.find(line => line.startsWith("rootdir"))?.slice(9).split(",")[0].trim();
     lines = removeTrailingPytestInfo(lines);
     // Use the rootdir defined by pytest if it's available
     const rootDirForPath = pytestRootDir ? pytestRootDir : rootDir;
@@ -79,7 +79,7 @@ const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
             const [name, linePath, line] = matches.slice(1);
             fixture = { name, docstring: "" };
 
-            const path = join(rootDirForPath, linePath);
+            const path = isAbsolute(linePath) ? linePath : join(rootDirForPath, linePath);
             try {
                 if (linePath !== currentFilePath) {
                     tmpContent = readFileSync(path, "utf8").split(/\r?\n/);
