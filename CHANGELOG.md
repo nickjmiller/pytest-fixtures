@@ -68,3 +68,7 @@
 
 * Trim rootdir to avoid invalid paths
 * Use absolute paths when recognized
+
+## [0.1.18]
+
+* Use workspace folder as rootDir if available
