@@ -72,3 +72,7 @@
 ## [0.1.18]
 
 * Use workspace folder as rootDir if available
+
+## [0.1.19]
+
+* Fix regression from using deprecated `pythonPath`

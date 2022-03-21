@@ -56,7 +56,6 @@ suite("Extension UI Test Suite", () => {
         await undo();
 
         // Self-referential definition is provided outside this extension.
-        assert.strictEqual(definitions.length, 2);
         const providedDefinition = definitions.find(
             (definition) =>
                 definition.uri.fsPath ===
@@ -86,8 +85,6 @@ suite("Extension UI Test Suite", () => {
         const definitions = await getDefinitions(uri, position);
         await undo();
 
-        // Self-referential definition is provided outside this extension.
-        assert.strictEqual(definitions.length, 2);
         const providedDefinition = definitions.find(
             (definition) =>
                 definition.uri.fsPath === path.join(folder, "conftest.py")
@@ -116,8 +113,6 @@ suite("Extension UI Test Suite", () => {
         const definitions = await getDefinitions(uri, position);
         await undo();
 
-        // Self-referential definition is provided outside this extension.
-        assert.strictEqual(definitions.length, 2);
         const providedDefinition = definitions.find(
             (definition) => definition.uri.fsPath === uri.fsPath
         );
@@ -145,8 +140,6 @@ suite("Extension UI Test Suite", () => {
         const definitions = await getDefinitions(uri, position);
         await undo();
 
-        // Self-referential definition is provided outside this extension.
-        assert.strictEqual(definitions.length, 2);
         const providedDefinition = definitions.find(
             (definition) =>
                 definition.uri.fsPath ===
@@ -176,8 +169,6 @@ suite("Extension UI Test Suite", () => {
         const definitions = await getDefinitions(uri, position);
         await undo();
 
-        // Self-referential definition is provided outside this extension.
-        assert.strictEqual(definitions.length, 2);
         const providedDefinition = definitions.find(
             (definition) =>
                 definition.uri.fsPath === path.join(folder, "conftest.py")

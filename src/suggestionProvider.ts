@@ -1,6 +1,7 @@
 import { parse } from "path";
 import * as vscode from "vscode";
-import { Fixture, getFixtures } from "./fixture";
+import { Fixture } from "./fixtureParser";
+import { getFixtures } from "./fixture";
 import { log } from "./logging";
 
 export const PYTHON: vscode.DocumentFilter = {
@@ -92,11 +93,12 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
         ]);
     }
 
-    private cacheFixtures = (document: vscode.TextDocument) => {
+    private cacheFixtures = async (document: vscode.TextDocument) => {
         if (isPythonTestFile(document)) {
             log("File is a python test file, loading fixtures...");
             const filePath = document.uri.fsPath;
-            this.cache[filePath] = getFixtures(document);
+            const fixtures =  await getFixtures(document);
+            this.cache[filePath] = fixtures;
         }
     };
 
