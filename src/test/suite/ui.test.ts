@@ -11,6 +11,7 @@ import {
 } from "./helpers";
 import { INNER_FIXTURES } from "./ui-test-data/inner-fixtures";
 import { OUTER_FIXTURES } from "./ui-test-data/outer-fixtures";
+import { VARIANT_FIXTURES } from "./ui-test-data/variant-fixture";
 
 suite("Extension UI Test Suite", () => {
     let folder = vscode.workspace.workspaceFolders![0].uri.fsPath;
@@ -39,6 +40,39 @@ suite("Extension UI Test Suite", () => {
 
         const fixtures = list.items.map((item) => item.label).sort();
         assert.deepStrictEqual(fixtures, OUTER_FIXTURES);
+    });
+
+    test("Should provide correct items to fixture with multiple decorators", async () => {
+        await openFile("test_variants.py");
+
+        const uri = vscode.window.activeTextEditor!.document.uri;
+        const position = new vscode.Position(5, 37);
+        const list = await getCompletionItems(uri, position);
+
+        const fixtures = list.items.map((item) => item.label).sort();
+        assert.deepStrictEqual(fixtures, VARIANT_FIXTURES.filter(f => f !== "fixture_with_multiple_decorators"));
+    });
+
+    test("Should provide correct items to test within class", async () => {
+        await openFile("test_variants.py");
+
+        const uri = vscode.window.activeTextEditor!.document.uri;
+        const position = new vscode.Position(10, 26);
+        const list = await getCompletionItems(uri, position);
+
+        const fixtures = list.items.map((item) => item.label).sort();
+        assert.deepStrictEqual(fixtures, VARIANT_FIXTURES);
+    });
+
+    test("Should provide correct items to test spanning multiple lines", async () => {
+        await openFile("test_variants.py");
+
+        const uri = vscode.window.activeTextEditor!.document.uri;
+        const position = new vscode.Position(15, 4);
+        const list = await getCompletionItems(uri, position);
+
+        const fixtures = list.items.map((item) => item.label).sort();
+        assert.deepStrictEqual(fixtures, VARIANT_FIXTURES);
     });
 
     test("Should navigate to correct fixture in inner test from inner conftest", async () => {

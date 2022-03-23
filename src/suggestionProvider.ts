@@ -17,29 +17,85 @@ const isPythonTestFile = (document: vscode.TextDocument) => {
     return file.startsWith("test_") || file.startsWith("conftest");
 };
 
+/**
+ * Iterates backwards through the document from the given position, checking each character
+ * to see if it is an open parens. Returns false if it cannot find one or discovers a closed
+ * parens first.
+ * 
+ * @param document active text document
+ * @param position position of the cursor
+ * @returns location of the open parens if found, otherwise undefined
+ */
+const positionOfOpenParens = (document: vscode.TextDocument, position: vscode.Position): vscode.Position | undefined => {
+    let pos = position.translate(0, -1); // Check to the left of the cursor
+    while (pos.line >= 0) {
+        const line = document.lineAt(pos.line).text;
+        for (let character = pos.character; character >= 0; character--) {
+            const char = line.substring(character, character + 1);
+            if (char === "(") {
+                return new vscode.Position(pos.line, character);
+            } else if (char === ")") {
+                return;
+            }
+        }
+        pos = new vscode.Position(pos.line - 1, document.lineAt(position.line - 1).text.length);
+    }
+    return;
+};
 
 /**
- * Check if a line can use fixture suggestions. Returns true if the line is a test function
- * or if the line is a pytest fixture.
+ * Checks if the line is a pytest fixture. Will check previous lines
+ * that begin with @ until it finds the `pytest.fixture` or returns False.
  * 
- * @param document 
- * @param lineText 
- * @param lineNumber 
- * @returns true if the current line is a function definition that can use fixtures
+ * Does not support many cases, including decorators that span multiple lines.
+ * 
+ * @param document active text document
+ * @param position position of the function definition
+ * @returns if a pytest fixture was found
  */
-const lineCanUseFixtureSuggestions = (document: vscode.TextDocument, lineText: string, lineNumber: number): boolean => {
-    // Exit early if we know it's a test function
-    if (lineText.startsWith("def test_")) {
+const isPytestFixture = (document: vscode.TextDocument, position: vscode.Position): boolean => {
+    const line = document.lineAt(position).text;
+    if (!line.trim().startsWith("def ")) {
+        return false;
+    }
+    let pos = position.translate(-1);
+    while (pos.line >= 0 && !document.lineAt(pos).isEmptyOrWhitespace) {
+        const line = document.lineAt(pos).text;
+        const index = document.lineAt(pos).firstNonWhitespaceCharacterIndex;
+        if (!(line.substring(index, index + 1) === "@")) {
+            return false;
+        }
+        if (line.includes("pytest.fixture")) {
+            return true;
+        }
+        pos = pos.translate(-1);
+    }
+    return false;
+};
+
+/**
+ * Brittle function that checks if there is a dangling open parens before
+ * the cursor and if that parens is on the same line as a function definition.
+ * It also checks if that function definition is preceeded by a pytest.fixture decorator.
+ * 
+ * @param document active text document
+ * @param position position of the cursor
+ * @returns 
+ */
+const isWithinTestFunctionArgs = (document: vscode.TextDocument, position: vscode.Position): boolean => {
+    let pos = positionOfOpenParens(document, position);
+    if (pos === undefined) {
+        return false;
+    }
+    const line = document.lineAt(pos).text;
+    if (line.includes(";")) {
+        // Bail, we aren't supporting that for now
+        return false;
+    }
+    if (line.trim().startsWith("def test_")) {
         return true;
     }
-    let isFixtureFunction = false;
-    if (lineNumber > 0) {
-        const previousLine = document.lineAt(lineNumber - 1).text;
-        // TODO this should be improved because @pytest.fixture can be way above than the previous line
-        // for example in fixtures with parameters        
-        isFixtureFunction = previousLine.startsWith("@pytest.fixture") && lineText.startsWith("def ");
-    }
-    return isFixtureFunction;
+    return isPytestFixture(document, pos);
 };
 
 /**
@@ -119,19 +175,12 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
 
         const lineText = document.lineAt(position.line).text;
         const testPath = document.uri.fsPath;
-        const cursorPosition = position.character;
 
-        if (lineCanUseFixtureSuggestions(document, lineText, position.line)
-            && this.cache[testPath]?.length) {
-            const lineTextBeforePosition = lineText.slice(0, cursorPosition);
-            if (
-                lineTextBeforePosition.includes("(") &&
-                !lineTextBeforePosition.includes(")")
-            ) {
-                const functionName = getFunctionName(lineText);
-                // Avoid self-reference for fixtures
-                return this.cache[testPath].filter((fixture) => fixture.name !== functionName);
-            }
+        if (this.cache[testPath]?.length &&
+            isWithinTestFunctionArgs(document, position)) {
+            const functionName = getFunctionName(lineText);
+            // Avoid self-reference for fixtures
+            return this.cache[testPath].filter((fixture) => fixture.name !== functionName);
         }
         return [];
     };
@@ -160,13 +209,12 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
 
     provideDefinition(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.Definition | vscode.LocationLink[]> {
         log(`Called provideDefinition: ${document.fileName}, position: ${JSON.stringify(position)}`);
+        const testPath = document.uri.fsPath;
 
-        const lineText = document.lineAt(position.line).text;
-
-        if(lineCanUseFixtureSuggestions(document, lineText, position.line)){
+        if(this.cache[testPath]?.length && isWithinTestFunctionArgs(document, position)){
             const range = document.getWordRangeAtPosition(position);
             const word = document.getText(range);
-            const fixtures = this.cache[document.uri.fsPath];
+            const fixtures = this.cache[testPath];
             const fixture = fixtures.find(f=> f.name === word);
             if(fixture?.fileLocation && fixture?.range)
             {
