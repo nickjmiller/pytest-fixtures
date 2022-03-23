@@ -76,3 +76,8 @@
 ## [0.1.19]
 
 * Fix regression from using deprecated `pythonPath`
+
+## [0.2.0]
+
+* Use a new method to detect if the cursor is within a compatible function.
+
