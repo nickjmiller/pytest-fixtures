@@ -142,7 +142,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
         _token: vscode.CancellationToken,
         _context: vscode.CompletionContext
     ): vscode.CompletionItem[] {
-        log(`Called provideCompletionItems: ${document.fileName}, position: ${position}`);
+        log(`Called provideCompletionItems: ${document.fileName}, position: ${JSON.stringify(position)}`);
         
         const suggestions = this.getSuggestions(document, position);
         if (suggestions.length) {
@@ -159,7 +159,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
     }
 
     provideDefinition(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.Definition | vscode.LocationLink[]> {
-        log(`Called provideDefinition: ${document.fileName}, position: ${position}`);
+        log(`Called provideDefinition: ${document.fileName}, position: ${JSON.stringify(position)}`);
 
         const lineText = document.lineAt(position.line).text;
 
