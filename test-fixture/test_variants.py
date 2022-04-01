@@ -8,7 +8,7 @@ def fixture_with_multiple_decorators():
 
 
 class TestClass:
-    def test_within_class():
+    def test_within_class(self):
         pass
 
 

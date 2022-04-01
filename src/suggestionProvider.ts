@@ -1,7 +1,7 @@
 import { parse } from "path";
 import * as vscode from "vscode";
-import { Fixture } from "./fixtureParser";
 import { getFixtures } from "./fixture";
+import { Fixture } from "./fixtureParser";
 import { log } from "./logging";
 
 export const PYTHON: vscode.DocumentFilter = {
@@ -55,9 +55,10 @@ const positionOfOpenParens = (document: vscode.TextDocument, position: vscode.Po
  */
 const isPytestFixture = (document: vscode.TextDocument, position: vscode.Position): boolean => {
     const line = document.lineAt(position).text;
-    if (!line.trim().startsWith("def ")) {
+    if (!isLineFunction(line)) {
         return false;
     }
+
     let pos = position.translate(-1);
     while (pos.line >= 0 && !document.lineAt(pos).isEmptyOrWhitespace) {
         const line = document.lineAt(pos).text;
@@ -72,6 +73,11 @@ const isPytestFixture = (document: vscode.TextDocument, position: vscode.Positio
     }
     return false;
 };
+
+function isLineFunction(line: string): boolean {
+    const trimmedLine = line.trim();
+    return trimmedLine.startsWith("def ") || trimmedLine.startsWith("async def ")
+}
 
 /**
  * Brittle function that checks if there is a dangling open parens before
@@ -92,11 +98,16 @@ const isWithinTestFunctionArgs = (document: vscode.TextDocument, position: vscod
         // Bail, we aren't supporting that for now
         return false;
     }
-    if (line.trim().startsWith("def test_")) {
+    if (isLineTestFunction(line)) {
         return true;
     }
     return isPytestFixture(document, pos);
 };
+
+function isLineTestFunction(line: string): boolean {
+    const trimmedLine = line.trim();
+    return trimmedLine.startsWith("def test_") || trimmedLine.startsWith("async def test_")
+}
 
 /**
  * Simple function to get the text between "def " and "(".

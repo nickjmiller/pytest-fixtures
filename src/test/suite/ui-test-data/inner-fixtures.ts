@@ -1,6 +1,7 @@
 export const INNER_FIXTURES = [
     "_private_fixture",
     "another_example",
+    "async_fixture",
     "cache",
     "capfd",
     "capfdbinary",

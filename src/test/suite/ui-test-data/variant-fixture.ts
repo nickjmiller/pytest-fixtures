@@ -1,5 +1,6 @@
 export const VARIANT_FIXTURES = [
     "another_example",
+    "async_fixture",
     "cache",
     "capfd",
     "capfdbinary",
