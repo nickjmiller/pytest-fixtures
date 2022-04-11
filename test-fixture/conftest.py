@@ -9,3 +9,7 @@ def example_fixture():
 @pytest.fixture
 def another_example():
     """Another example fixture"""
+
+@pytest.fixture
+async def async_fixture():
+    """Example async fixture"""
