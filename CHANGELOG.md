@@ -81,3 +81,8 @@
 
 * Use a new method to detect if the cursor is within a compatible function.
 
+## [0.2.1]
+
+* Support async methods, thanks [DATek](https://github.com/DAtek)
+
+
