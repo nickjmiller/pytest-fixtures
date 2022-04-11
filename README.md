@@ -17,7 +17,7 @@ Will first check `"python.testing.pytestPath"` for pytest, then will fallback on
 
 * Python
 * pytest
-* pytest-asyncio
+* (Optionally) pytest-asyncio
 
 
 ## Known Issues
