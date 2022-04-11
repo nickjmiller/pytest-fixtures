@@ -76,7 +76,7 @@ const isPytestFixture = (document: vscode.TextDocument, position: vscode.Positio
 
 function isLineFunction(line: string): boolean {
     const trimmedLine = line.trim();
-    return trimmedLine.startsWith("def ") || trimmedLine.startsWith("async def ")
+    return trimmedLine.startsWith("def ") || trimmedLine.startsWith("async def ");
 }
 
 /**
@@ -106,18 +106,20 @@ const isWithinTestFunctionArgs = (document: vscode.TextDocument, position: vscod
 
 function isLineTestFunction(line: string): boolean {
     const trimmedLine = line.trim();
-    return trimmedLine.startsWith("def test_") || trimmedLine.startsWith("async def test_")
+    return trimmedLine.startsWith("def test_") || trimmedLine.startsWith("async def test_");
 }
 
 /**
- * Simple function to get the text between "def " and "(".
+ * Get the function name from the current line.
+ * 
+ * TODO: Get the relevant function name if on another line
  *
  * @param lineText line containing function definition
  * @returns function name
  */
-const getFunctionName = (lineText: string): string => {
+const getFunctionName = (lineText: string): string | undefined => {
     const indexOfParens = lineText.indexOf("(");
-    return lineText.slice(4, indexOfParens); // 4 for "def "
+    return lineText.slice(indexOfParens).split(" ").pop();
 };
 
 
