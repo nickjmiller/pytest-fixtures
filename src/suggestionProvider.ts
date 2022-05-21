@@ -149,17 +149,16 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
                     this.cacheFixtures(editor.document);
                 }
             }),
-            vscode.workspace.onDidSaveTextDocument(document => {
-                const filePath = document.uri.fsPath;
-                // Only look at files that have already been seen.
-                if (this.cache[filePath]) {
-                    log(`SavedDocument ${document.fileName}, reloading fixtures...`);
-                    this.cacheFixtures(document);
-                }
-            }),
             vscode.languages.registerCompletionItemProvider(PYTHON, this),
             vscode.languages.registerDefinitionProvider(PYTHON, this),
         ]);
+
+        const command = "pytest-fixtures.scanForFixtures";
+        const commandHandler = (textEditor: vscode.TextEditor) => {
+            log(`Active file is ${textEditor.document.fileName}, loading fixtures...`);
+            this.cacheFixtures(textEditor.document);
+        };
+        context.subscriptions.push(vscode.commands.registerTextEditorCommand(command, commandHandler));
     }
 
     private cacheFixtures = async (document: vscode.TextDocument) => {

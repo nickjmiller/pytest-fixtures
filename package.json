@@ -2,7 +2,7 @@
   "name": "pytest-fixtures",
   "displayName": "pytest-fixtures",
   "description": "Pytest fixtures support for vscode",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "engines": {
     "vscode": "^1.54.0"
   },
@@ -27,7 +27,16 @@
     "onLanguage:python"
   ],
   "main": "./dist/extension.js",
-  "contributes": {},
+  "contributes": {
+    "commands": [
+      {
+        "command": "pytest-fixtures.scanForFixtures",
+        "title": "pytest-fixtures: Scan current file for pytest fixtures",
+        "shortTitle": "Scan for pytest fixtures",
+        "enablement": "resourceScheme == file && resourceLangId == python"
+      }
+    ]
+  },
   "scripts": {
     "vscode:prepublish": "npm run package",
     "compile": "webpack",

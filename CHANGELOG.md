@@ -85,4 +85,7 @@
 
 * Support async methods, thanks [DATek](https://github.com/DAtek)
 
+## [0.2.2]
 
+* Fixed performance issue on saving python test files, fixtures no longer are scanned for on save
+* Registered command to scan for fixtures
