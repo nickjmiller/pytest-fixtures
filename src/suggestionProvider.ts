@@ -123,6 +123,10 @@ const getFunctionName = (lineText: string): string | undefined => {
 };
 
 
+const shouldScanForFixtures = () => {
+    return vscode.workspace.getConfiguration("pytest-fixtures").get("scanForFixturesOnFileChange");
+};
+
 export class PytestFixtureProvider implements vscode.CompletionItemProvider, vscode.DefinitionProvider {
     readonly cache: { [Key: string]: Fixture[] } = {};
     private _activated = false;
@@ -137,15 +141,15 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
      */
     activate(context: vscode.ExtensionContext) {
         this._activated = true;
-        if (vscode.window.activeTextEditor) {
-            log(`Active file is ${vscode.window.activeTextEditor.document.fileName}, loading fixtures...`);
+        if (shouldScanForFixtures() && vscode.window.activeTextEditor) {
+            log(`Loading fixtures for ${vscode.window.activeTextEditor.document.fileName}`);
             this.cacheFixtures(vscode.window.activeTextEditor.document);
         }
-
+        
         context.subscriptions.push(... [
             vscode.window.onDidChangeActiveTextEditor(editor => {
-                if (editor) {
-                    log(`Changed active file to ${editor.document.fileName}, loading fixtures...`);
+                if (shouldScanForFixtures()  && editor) {
+                    log(`Active file changed; Loading fixtures for ${editor.document.fileName}`);
                     this.cacheFixtures(editor.document);
                 }
             }),
@@ -155,7 +159,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
 
         const command = "pytest-fixtures.scanForFixtures";
         const commandHandler = (textEditor: vscode.TextEditor) => {
-            log(`Active file is ${textEditor.document.fileName}, loading fixtures...`);
+            log(`Loading fixtures for ${textEditor.document.fileName}`);
             this.cacheFixtures(textEditor.document);
         };
         context.subscriptions.push(vscode.commands.registerTextEditorCommand(command, commandHandler));
@@ -163,7 +167,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
 
     private cacheFixtures = async (document: vscode.TextDocument) => {
         if (isPythonTestFile(document)) {
-            log("File is a python test file, loading fixtures...");
+            log("Loading fixtures...");
             const filePath = document.uri.fsPath;
             const fixtures =  await getFixtures(document);
             this.cache[filePath] = fixtures;
@@ -220,22 +224,35 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
     }
 
     provideDefinition(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.Definition | vscode.LocationLink[]> {
-        log(`Called provideDefinition: ${document.fileName}, position: ${JSON.stringify(position)}`);
-        const testPath = document.uri.fsPath;
+        return new Promise((resolve) => {
+            log(`Called provideDefinition: ${document.fileName}, position: ${JSON.stringify(position)}`);
+            const testPath = document.uri.fsPath;
 
-        if(this.cache[testPath]?.length && isWithinTestFunctionArgs(document, position)){
-            const range = document.getWordRangeAtPosition(position);
-            const word = document.getText(range);
-            const fixtures = this.cache[testPath];
-            const fixture = fixtures.find(f=> f.name === word);
-            if(fixture?.fileLocation && fixture?.range)
-            {
-                return new vscode.Location(
-                    fixture.fileLocation,
-                    fixture.range
-                );
+            if (this.cache[testPath]?.length && isWithinTestFunctionArgs(document, position)) {
+                resolve(this.getFixtures(document, position));
+
             }
+            else {
+                this.cacheFixtures(document).then(() => {
+                    resolve(this.getFixtures(document, position));
+                });
+            }
+        });
+    }
+
+    private getFixtures(document: vscode.TextDocument, position: vscode.Position): vscode.Definition | vscode.LocationLink[] {
+        const testPath = document.uri.fsPath;
+        const range = document.getWordRangeAtPosition(position);
+        const word = document.getText(range);
+        const fixtures = this.cache[testPath];
+        const fixture = fixtures.find(f => f.name === word);
+        if (fixture?.fileLocation && fixture?.range) {
+            return new vscode.Location(
+                fixture.fileLocation,
+                fixture.range
+            );
         }
         return [];
     }
+
 }
