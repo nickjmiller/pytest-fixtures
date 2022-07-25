@@ -2,7 +2,7 @@
   "name": "pytest-fixtures",
   "displayName": "pytest-fixtures",
   "description": "Pytest fixtures support for vscode",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "engines": {
     "vscode": "^1.54.0"
   },
@@ -35,7 +35,18 @@
         "shortTitle": "Scan for pytest fixtures",
         "enablement": "resourceScheme == file && resourceLangId == python"
       }
-    ]
+    ],
+
+    "configuration": {
+      "title": "PyTest Fixtures",
+      "properties": {
+        "pytest-fixtures.scanForFixturesOnFileChange": {
+          "type": "boolean",
+          "default": true,
+          "description": "Scan current file for pytest fixtures on file change"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
