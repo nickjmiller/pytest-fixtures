@@ -224,20 +224,23 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
     }
 
     provideDefinition(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.Definition | vscode.LocationLink[]> {
-        return new Promise((resolve) => {
-            log(`Called provideDefinition: ${document.fileName}, position: ${JSON.stringify(position)}`);
-            const testPath = document.uri.fsPath;
+        if(isWithinTestFunctionArgs(document, position)) {
+            return new Promise((resolve) => {
+                log(`Called provideDefinition: ${document.fileName}, position: ${JSON.stringify(position)}`);
+                const testPath = document.uri.fsPath;
 
-            if (this.cache[testPath]?.length && isWithinTestFunctionArgs(document, position)) {
-                resolve(this.getFixtures(document, position));
-
-            }
-            else {
-                this.cacheFixtures(document).then(() => {
+                if (this.cache[testPath]?.length) {
                     resolve(this.getFixtures(document, position));
-                });
-            }
-        });
+
+                }
+                else {
+                    this.cacheFixtures(document).then(() => {
+                        resolve(this.getFixtures(document, position));
+                    });
+                }
+            });
+        }
+        return [];
     }
 
     private getFixtures(document: vscode.TextDocument, position: vscode.Position): vscode.Definition | vscode.LocationLink[] {
