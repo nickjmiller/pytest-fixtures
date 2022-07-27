@@ -1,3 +1,4 @@
+import { throws } from "assert";
 import { parse } from "path";
 import * as vscode from "vscode";
 import { getFixtures } from "./fixture";
@@ -128,9 +129,10 @@ const shouldScanForFixtures = () => {
 };
 
 export class PytestFixtureProvider implements vscode.CompletionItemProvider, vscode.DefinitionProvider {
-    readonly cache: { [Key: string]: Fixture[] } = {};
+    cache: { [Key: string]: Fixture[] } = {};
     private _activated = false;
-
+    private readonly cacheKey = "pytest_fixtures_data";
+    private context: vscode.ExtensionContext | undefined;
     get activated() {
         return this._activated;
     }
@@ -141,6 +143,8 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
      */
     activate(context: vscode.ExtensionContext) {
         this._activated = true;
+        this.context = context;
+        this.cache = context.workspaceState.get<{ [Key: string]: Fixture[] }>(this.cacheKey, {});
         if (shouldScanForFixtures() && vscode.window.activeTextEditor) {
             log(`Loading fixtures for ${vscode.window.activeTextEditor.document.fileName}`);
             this.cacheFixtures(vscode.window.activeTextEditor.document);
@@ -165,12 +169,13 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
         context.subscriptions.push(vscode.commands.registerTextEditorCommand(command, commandHandler));
     }
 
+    
     private cacheFixtures = async (document: vscode.TextDocument) => {
         if (isPythonTestFile(document)) {
-            log("Loading fixtures...");
             const filePath = document.uri.fsPath;
             const fixtures =  await getFixtures(document);
             this.cache[filePath] = fixtures;
+            await this.context?.workspaceState.update(this.cacheKey, this.cache);
         }
     };
 
