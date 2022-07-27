@@ -89,3 +89,10 @@
 
 * Fixed performance issue on saving python test files, fixtures no longer are scanned for on save
 * Registered command to scan for fixtures
+
+## [0.2.3]
+
+* New: added new setting to disable refreshing fixtures on file change, and instead caching when requesting suggestions.
+* New: cache fixtures for the workspace
+
+Thanks [ItamarShDev](https://github.com/ItamarShDev) for both.
