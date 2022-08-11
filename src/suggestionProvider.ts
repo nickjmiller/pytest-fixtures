@@ -15,7 +15,7 @@ const isPythonTestFile = (document: vscode.TextDocument) => {
         return false;
     }
     const file = parse(document.fileName).base;
-    return file.startsWith("test_") || file.startsWith("conftest");
+    return file.startsWith("test_") || file.endsWith("_test.py") || file.startsWith("conftest");
 };
 
 /**
