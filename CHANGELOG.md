@@ -96,3 +96,7 @@
 * New: cache fixtures for the workspace
 
 Thanks [ItamarShDev](https://github.com/ItamarShDev) for both.
+
+## [0.2.4]
+
+* Fixed recognition of files ending in `_test`, thanks [sbeal](https://github.com/sbeal)
