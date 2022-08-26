@@ -13,9 +13,21 @@ VSCode extension to provide intellisense for Pytest Fixtures. Inspired by [pytes
 
 Will first check `"python.testing.pytestPath"` for pytest, then will fallback on `python -m pytest` with the selected interpreter.
 
-Optional extra command line arguments for pytest to discover fixtures
+## Optional extra command line arguments for pytest to discover fixtures
 
-`"pytest-fixtures.extraArgs"` is an arry of string. 
+In the .vscode/settings.json you can add the extra arguments and the plugin uses this args if exist.
+
+
+`"pytest-fixtures.extra_arguments"` is an arry of string.
+
+```json
+{
+    "pytest-fixtures.extra_arguments": [
+        "-p",
+        "abc.pytest.common.bootstrap",
+    ]
+}
+```
 
 ## Requirements
 
