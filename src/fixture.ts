@@ -34,9 +34,9 @@ export const getFixtures = async (document: vscode.TextDocument) => {
     let args = ["--color", "no", "--fixtures", "-v", document.uri.fsPath];
     const extraArgs: [string] | undefined  = vscode.workspace
         .getConfiguration("pytest-fixtures", document.uri)
-        .get("extra_arguments");
+        .get("extraArguments");
 
-    if (extraArgs) {
+    if (extraArgs && extraArgs.length) {
         args = args.concat(args, extraArgs);
     }
     const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || dirname(document.uri.fsPath);

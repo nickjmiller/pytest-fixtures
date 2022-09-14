@@ -45,7 +45,7 @@
           "default": true,
           "description": "Scan current file for pytest fixtures on file change"
         },
-        "pytest-fixtures.extra_arguments": {
+        "pytest-fixtures.extraArguments": {
           "type": "array",
           "default": [],
           "description": "Extra arguments for pytest --fixtures command"

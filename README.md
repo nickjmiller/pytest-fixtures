@@ -18,11 +18,11 @@ Will first check `"python.testing.pytestPath"` for pytest, then will fallback on
 In the .vscode/settings.json you can add the extra arguments and the plugin uses this args if exist.
 
 
-`"pytest-fixtures.extra_arguments"` is an arry of string.
+`"pytest-fixtures.extraArguments"` is an array of string.
 
 ```json
 {
-    "pytest-fixtures.extra_arguments": [
+    "pytest-fixtures.extraArguments": [
         "-p",
         "abc.pytest.common.bootstrap",
     ]
