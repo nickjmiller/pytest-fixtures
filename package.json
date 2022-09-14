@@ -2,7 +2,7 @@
   "name": "pytest-fixtures",
   "displayName": "pytest-fixtures",
   "description": "Pytest fixtures support for vscode",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "engines": {
     "vscode": "^1.54.0"
   },
@@ -44,6 +44,11 @@
           "type": "boolean",
           "default": true,
           "description": "Scan current file for pytest fixtures on file change"
+        },
+        "pytest-fixtures.extra_arguments": {
+          "type": "array",
+          "default": [],
+          "description": "Extra arguments for pytest --fixtures command"
         }
       }
     }

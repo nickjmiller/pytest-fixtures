@@ -100,3 +100,7 @@ Thanks [ItamarShDev](https://github.com/ItamarShDev) for both.
 ## [0.2.4]
 
 * Fixed recognition of files ending in `_test`, thanks [sbeal](https://github.com/sbeal)
+
+## [0.2.5]
+
+* Added configuration for extra arguments to pytest --fixtures, thanks [thu2004](https://github.com/thu2004)
