@@ -120,7 +120,7 @@ function isLineTestFunction(line: string): boolean {
  */
 const getFunctionName = (lineText: string): string | undefined => {
     const indexOfParens = lineText.indexOf("(");
-    return lineText.slice(indexOfParens).split(" ").pop();
+    return lineText.slice(0, indexOfParens).split(" ").pop();
 };
 
 
