@@ -22,7 +22,7 @@ const isPythonTestFile = (document: vscode.TextDocument) => {
  * Iterates backwards through the document from the given position, checking each character
  * to see if it is an open parens. Returns false if it cannot find one or discovers a closed
  * parens first.
- * 
+ *
  * @param document active text document
  * @param position position of the cursor
  * @returns location of the open parens if found, otherwise undefined
@@ -47,9 +47,9 @@ const positionOfOpenParens = (document: vscode.TextDocument, position: vscode.Po
 /**
  * Checks if the line is a pytest fixture. Will check previous lines
  * that begin with @ until it finds the `pytest.fixture` or returns False.
- * 
+ *
  * Does not support many cases, including decorators that span multiple lines.
- * 
+ *
  * @param document active text document
  * @param position position of the function definition
  * @returns if a pytest fixture was found
@@ -84,10 +84,10 @@ function isLineFunction(line: string): boolean {
  * Brittle function that checks if there is a dangling open parens before
  * the cursor and if that parens is on the same line as a function definition.
  * It also checks if that function definition is preceeded by a pytest.fixture decorator.
- * 
+ *
  * @param document active text document
  * @param position position of the cursor
- * @returns 
+ * @returns
  */
 const isWithinTestFunctionArgs = (document: vscode.TextDocument, position: vscode.Position): boolean => {
     let pos = positionOfOpenParens(document, position);
@@ -112,7 +112,7 @@ function isLineTestFunction(line: string): boolean {
 
 /**
  * Get the function name from the current line.
- * 
+ *
  * TODO: Get the relevant function name if on another line
  *
  * @param lineText line containing function definition
@@ -139,7 +139,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
 
     /**
      * Passing the context lets the provider set up its listeners.
-     * @param context 
+     * @param context
      */
     activate(context: vscode.ExtensionContext) {
         this._activated = true;
@@ -149,7 +149,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
             log(`Loading fixtures for ${vscode.window.activeTextEditor.document.fileName}`);
             this.cacheFixtures(vscode.window.activeTextEditor.document);
         }
-        
+
         context.subscriptions.push(... [
             vscode.window.onDidChangeActiveTextEditor(editor => {
                 if (shouldScanForFixtures()  && editor) {
@@ -169,7 +169,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
         context.subscriptions.push(vscode.commands.registerTextEditorCommand(command, commandHandler));
     }
 
-    
+
     private cacheFixtures = async (document: vscode.TextDocument) => {
         if (isPythonTestFile(document)) {
             const filePath = document.uri.fsPath;
@@ -183,7 +183,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
      * Get suggestions for the given cursor position in a document.
      * If the cursor is within the parameter section of a test function, in
      * a file with cached fixtures, provide results.
-     * 
+     *
      * @param document current document
      * @param position current cursor position
      * @returns list of fixtures or an empty list
@@ -213,7 +213,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
         _context: vscode.CompletionContext
     ): vscode.CompletionItem[] {
         log(`Called provideCompletionItems: ${document.fileName}, position: ${JSON.stringify(position)}`);
-        
+
         const suggestions = this.getSuggestions(document, position);
         if (suggestions.length) {
             return suggestions.map((fixture) => {
