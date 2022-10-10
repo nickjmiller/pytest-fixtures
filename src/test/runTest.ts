@@ -3,7 +3,7 @@ import { spawnSync } from "child_process";
 import { PythonShell } from "python-shell";
 import { runTests } from "vscode-test";
 
-async function checkPyTestIsInstalled() {
+function checkPyTestIsInstalled() {
     const response = spawnSync(PythonShell.defaultPythonPath, ["-m", "pytest"]);
     if (response.status !== 0) {
         console.log("########################################################################################");
@@ -14,7 +14,7 @@ async function checkPyTestIsInstalled() {
 }
 
 async function main() {
-    await checkPyTestIsInstalled();
+    checkPyTestIsInstalled();
     try {
         // The folder containing the Extension Manifest package.json
         // Passed to `--extensionDevelopmentPath`
