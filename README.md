@@ -10,6 +10,7 @@ VSCode extension to provide intellisense for Pytest Fixtures. Inspired by [pytes
 
 * Autocomplete suggestions for parameters of test functions where fixtures may be used. Includes docstrings. Context aware of different fixtures available for each file.
 * Go To Definition support. Uses pytest output to determine location of fixture.
+* When type ':' character after a parameter and press autocomplete keyboard shortcut, the return type of the fixture is showed if the fixture is annotated with return type.
 
 Will first check `"python.testing.pytestPath"` for pytest, then will fallback on `python -m pytest` with the selected interpreter.
 
@@ -38,7 +39,6 @@ In the .vscode/settings.json you can add the extra arguments and the plugin uses
 
 ## Known Issues
 
-* Does not support typing of fixture parameters.
 * Python extension provides a self-referential definition of function parameters so there will be two definitions, see [here](https://github.com/microsoft/vscode-python/issues/18536)
 
 ## Release Notes

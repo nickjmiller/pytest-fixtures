@@ -20,6 +20,37 @@ suite("Extension UI Test Suite", () => {
         await closeAllEditors();
     });
 
+    test("Should return typing", async () => {
+        await openFile("test_typing.py");
+
+        const uri = vscode.window.activeTextEditor!.document.uri;
+        const position = new vscode.Position(1, 35);
+        await vscode.window.activeTextEditor!.edit((editBuilder) => {
+            editBuilder.insert(position, ":");
+        });
+
+        const colonPosition = new vscode.Position(1, 36);
+
+        const list = await getCompletionItems(uri, colonPosition);
+        assert.strictEqual(list.items.length, 1);
+        assert.strictEqual(list.items[0].label, "str");
+    });
+
+    test("Should not return typing", async () => {
+        await openFile("test_typing.py");
+
+        const uri = vscode.window.activeTextEditor!.document.uri;
+        const position = new vscode.Position(4, 34);
+        await vscode.window.activeTextEditor!.edit((editBuilder) => {
+            editBuilder.insert(position, ":");
+        });
+
+        const colonPosition = new vscode.Position(4, 35);
+
+        const list = await getCompletionItems(uri, colonPosition);
+        assert.strictEqual(list.items.length, 0);
+    });
+
     test("Should provide correct items to inner test", async () => {
         await openFile(path.join("test_package", "test_example.py"));
 

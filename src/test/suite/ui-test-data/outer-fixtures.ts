@@ -9,6 +9,7 @@ export const OUTER_FIXTURES = [
     "capsysbinary",
     "doctest_namespace",
     "example_fixture",
+    "fixture_with_typing",
     "local_outer_fixture",
     "monkeypatch",
     "pytestconfig",

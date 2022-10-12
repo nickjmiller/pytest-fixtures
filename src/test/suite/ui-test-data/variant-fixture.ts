@@ -10,6 +10,7 @@ export const VARIANT_FIXTURES = [
     "doctest_namespace",
     "example_fixture",
     "fixture_with_multiple_decorators",
+    "fixture_with_typing",
     "monkeypatch",
     "pytestconfig",
     "record_property",

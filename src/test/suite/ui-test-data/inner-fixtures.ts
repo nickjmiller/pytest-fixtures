@@ -10,6 +10,7 @@ export const INNER_FIXTURES = [
     "capsysbinary",
     "doctest_namespace",
     "example_fixture",
+    "fixture_with_typing",
     "local_fixture",
     "monkeypatch",
     "pytestconfig",

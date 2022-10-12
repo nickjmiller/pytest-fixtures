@@ -13,3 +13,8 @@ def another_example():
 @pytest.fixture
 async def async_fixture():
     """Example async fixture"""
+
+@pytest.fixture
+def fixture_with_typing() -> str:
+    """ Example fixture with typing """
+    yield "Hello world"
