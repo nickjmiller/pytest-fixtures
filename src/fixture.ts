@@ -25,7 +25,7 @@ export const getPythonPath = async (resource: vscode.Uri) => {
  * Pytest provides different fixtures for different files, based on
  * hierarchy and context. We use the current python interpreter to
  * call pytest --fixtures for each file and record the responses.
- * 
+ *
  * @param document
  * @returns list of fixtures prepared for the file
  */
@@ -52,10 +52,10 @@ export const getFixtures = async (document: vscode.TextDocument) => {
         log(`Running command ${pytestPath} -m pytest ${args.join(" ")} in directory ${cwd}`);
         response = spawnSync(pytestPath, args, { shell: true, cwd });
     }
-    
+
     if(response.status !== 0) {
         log(`Error running pytest: ${response.stderr}`);
         return [];
     }
-    return parsePytestOutputToFixtures(response.stdout.toString(), cwd);
+    return parsePytestOutputToFixtures(response.stdout.toString(), cwd, document.uri);
 };

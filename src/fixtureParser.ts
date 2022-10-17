@@ -1,9 +1,9 @@
 import { spawnSync } from "child_process";
-import { PythonShell } from "python-shell";
 import { readFileSync } from "fs";
-import { join, isAbsolute } from "path";
+import { join, isAbsolute, sep } from "path";
 import * as vscode from "vscode";
 import { log } from "./logging";
+import { getPythonPath } from "./fixture";
 
 export interface Fixture {
     name: string;
@@ -34,9 +34,9 @@ const removeTrailingPytestInfo = (lines: string[]) => {
  * Find where pytest is installed and return the pip package location
  */
 
-const findPipPackageLocation = async () => {
+const findPipPackageLocation = async (resource: vscode.Uri) => {
     let pyTestLocation = "";
-    const response = spawnSync(PythonShell.defaultPythonPath, ["-m", "pip", "show", "pytest"]);
+    const response = spawnSync(await getPythonPath(resource), ["-m", "pip", "show", "pytest"]);
     if (response.status === 0) {
         let lines = response.stdout.toString().split(/\r?\n/);
         lines.forEach(line => {
@@ -59,7 +59,7 @@ const findPipPackageLocation = async () => {
  * @param output pytest --fixtures output
  * @returns list of fixtures parsed from output
  */
-export const parsePytestOutputToFixtures = async (output: string, rootDir: string) => {
+export const parsePytestOutputToFixtures = async (output: string, rootDir: string, resource: vscode.Uri) => {
     const fixtures: Fixture[] = [];
     let alreadyEncountered: Record<string, number> = {};
     let currentFilePath: string | null = null;
@@ -69,7 +69,7 @@ export const parsePytestOutputToFixtures = async (output: string, rootDir: strin
     lines = removeTrailingPytestInfo(lines);
     // Use the rootdir defined by pytest if it's available
     const rootDirForPath = pytestRootDir ? pytestRootDir : rootDir;
-    const pipPackageLocation = await findPipPackageLocation();
+    const pipPackageLocation = await findPipPackageLocation(resource);
     let tmpContent: string[] | null = null;
 
     let fixture: Fixture = {
@@ -102,7 +102,7 @@ export const parsePytestOutputToFixtures = async (output: string, rootDir: strin
             fixture = { name, docstring: "" };
             let path;
             // check if pytest fixture
-            if (linePath.indexOf(".../_pytest") > -1) {
+            if (linePath.indexOf(`...${sep}_pytest`) > -1) {
                 path = linePath.replace("...", pipPackageLocation);
             } else {
                 path = isAbsolute(linePath) ? linePath : join(rootDirForPath, linePath);
