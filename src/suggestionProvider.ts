@@ -31,7 +31,7 @@ const positionOfOpenParens = (document: vscode.TextDocument, position: vscode.Po
     let pos = position.translate(0, -1); // Check to the left of the cursor
     while (pos.line >= 0) {
         const line = document.lineAt(pos.line).text;
-        for (let character = pos.character; character >= 0; character--) {
+        for (let character = line.length - 1; character >= 0; character--) {
             const char = line.substring(character, character + 1);
             if (char === "(") {
                 return new vscode.Position(pos.line, character);
