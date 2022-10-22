@@ -1,5 +1,7 @@
 import pytest
 
+class Tesla:
+    model: str;
 
 @pytest.fixture
 def example_fixture():
@@ -15,6 +17,6 @@ async def async_fixture():
     """Example async fixture"""
 
 @pytest.fixture
-def fixture_with_typing() -> str:
+def fixture_with_typing() -> Tesla:
     """ Example fixture with typing """
-    yield "Hello world"
+    yield "Tesla model X"

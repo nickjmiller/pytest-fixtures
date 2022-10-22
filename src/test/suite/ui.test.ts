@@ -35,8 +35,8 @@ suite("Extension UI Test Suite", () => {
         const colonPosition = new vscode.Position(1, 36);
 
         const list = await getCompletionItems(uri, colonPosition);
-        assert.strictEqual(list.items.length, 1);
-        assert.strictEqual(list.items[0].label, "str");
+        const typeOrFixtures = list.items.map((item) => item.label.toString()).sort();
+        assert(isAllElementFound(typeOrFixtures, ["Tesla"]), "should return typing");
     });
 
     test("Should not return typing", async () => {
@@ -51,7 +51,8 @@ suite("Extension UI Test Suite", () => {
         const colonPosition = new vscode.Position(4, 35);
 
         const list = await getCompletionItems(uri, colonPosition);
-        assert.strictEqual(list.items.length, 0);
+        const typeOrFixtures = list.items.map((item) => item.label.toString()).sort();
+        assert(!isAllElementFound(typeOrFixtures, ["Tesla"]), "should not return typing");
     });
 
     test("Should provide correct items to inner test", async () => {
@@ -163,8 +164,8 @@ suite("Extension UI Test Suite", () => {
         assert.deepStrictEqual(
             providedDefinition.range,
             new vscode.Range(
-                new vscode.Position(9, 4),
-                new vscode.Position(9, 19)
+                new vscode.Position(11, 4),
+                new vscode.Position(11, 19)
             )
         );
     });
@@ -247,8 +248,8 @@ suite("Extension UI Test Suite", () => {
         assert.deepStrictEqual(
             providedDefinition.range,
             new vscode.Range(
-                new vscode.Position(4, 4),
-                new vscode.Position(4, 19)
+                new vscode.Position(6, 4),
+                new vscode.Position(6, 19)
             )
         );
     });
