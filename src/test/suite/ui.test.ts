@@ -8,6 +8,8 @@ import {
     getDefinitions,
     openFile,
     undo,
+    isAllElementFound,
+    sleep,
 } from "./helpers";
 import { INNER_FIXTURES } from "./ui-test-data/inner-fixtures";
 import { OUTER_FIXTURES } from "./ui-test-data/outer-fixtures";
@@ -29,6 +31,7 @@ suite("Extension UI Test Suite", () => {
             editBuilder.insert(position, ":");
         });
 
+        await sleep(2000);
         const colonPosition = new vscode.Position(1, 36);
 
         const list = await getCompletionItems(uri, colonPosition);
@@ -58,8 +61,8 @@ suite("Extension UI Test Suite", () => {
         const position = new vscode.Position(6, 17);
         const list = await getCompletionItems(uri, position);
 
-        const fixtures = list.items.map((item) => item.label).sort();
-        assert.deepStrictEqual(fixtures, INNER_FIXTURES);
+        const fixtures = list.items.map((item) => item.label.toString()).sort();
+        assert(isAllElementFound(fixtures, INNER_FIXTURES), "Not all inner fixtures are found");
     });
 
     test("Should provide correct items to outer test", async () => {
@@ -69,8 +72,8 @@ suite("Extension UI Test Suite", () => {
         const position = new vscode.Position(6, 17);
         const list = await getCompletionItems(uri, position);
 
-        const fixtures = list.items.map((item) => item.label).sort();
-        assert.deepStrictEqual(fixtures, OUTER_FIXTURES);
+        const fixtures = list.items.map((item) => item.label.toString()).sort();
+        assert(isAllElementFound(fixtures, OUTER_FIXTURES), "Not all outer fixtures are found");
     });
 
     test("Should provide correct items to fixture with multiple decorators", async () => {
@@ -80,8 +83,9 @@ suite("Extension UI Test Suite", () => {
         const position = new vscode.Position(5, 37);
         const list = await getCompletionItems(uri, position);
 
-        const fixtures = list.items.map((item) => item.label).sort();
-        assert.deepStrictEqual(fixtures, VARIANT_FIXTURES.filter(f => f !== "fixture_with_multiple_decorators"));
+        const fixtures = list.items.map((item) => item.label.toString()).sort();
+        assert(isAllElementFound(fixtures, VARIANT_FIXTURES.filter(f => f !== "fixture_with_multiple_decorators")),
+            "Not all variant fixtures are found");
     });
 
     test("Should provide correct items to test within class", async () => {
@@ -91,8 +95,8 @@ suite("Extension UI Test Suite", () => {
         const position = new vscode.Position(10, 26);
         const list = await getCompletionItems(uri, position);
 
-        const fixtures = list.items.map((item) => item.label).sort();
-        assert.deepStrictEqual(fixtures, VARIANT_FIXTURES);
+        const fixtures = list.items.map((item) => item.label.toString()).sort();
+        assert(isAllElementFound(fixtures, VARIANT_FIXTURES), "Not all variant fixtures are found");
     });
 
     test("Should provide correct items to test spanning multiple lines", async () => {
@@ -102,8 +106,8 @@ suite("Extension UI Test Suite", () => {
         const position = new vscode.Position(15, 4);
         const list = await getCompletionItems(uri, position);
 
-        const fixtures = list.items.map((item) => item.label).sort();
-        assert.deepStrictEqual(fixtures, VARIANT_FIXTURES);
+        const fixtures = list.items.map((item) => item.label.toString()).sort();
+        assert(isAllElementFound(fixtures, VARIANT_FIXTURES), "Not all variant fixtures are found");
     });
 
     test("Should navigate to correct fixture in inner test from inner conftest", async () => {
