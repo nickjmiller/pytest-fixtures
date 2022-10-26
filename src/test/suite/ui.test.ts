@@ -170,6 +170,34 @@ suite("Extension UI Test Suite", () => {
         );
     });
 
+    test("Should navigate to correct fixture when the function name is long", async () => {
+        await openFile(path.join("test_package", "test_example.py"));
+
+        const uri = vscode.window.activeTextEditor!.document.uri;
+        const position = new vscode.Position(17, 4);
+
+        await vscode.window.activeTextEditor!.edit((editBuilder) => {
+            editBuilder.insert(position, "another_example");
+        });
+
+        const definitions = await getDefinitions(uri, position);
+        await undo();
+
+        const providedDefinition = definitions.find(
+            (definition) =>
+                definition.uri.fsPath === path.join(folder, "conftest.py")
+        );
+
+        assert.strict(providedDefinition);
+        assert.deepStrictEqual(
+            providedDefinition.range,
+            new vscode.Range(
+                new vscode.Position(11, 4),
+                new vscode.Position(11, 19)
+            )
+        );
+    });
+
     test("Should navigate to correct fixture in inner test from inner test", async () => {
         await openFile(path.join("test_package", "test_example.py"));
 

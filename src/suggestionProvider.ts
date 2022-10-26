@@ -39,7 +39,7 @@ const positionOfOpenParens = (document: vscode.TextDocument, position: vscode.Po
                 return;
             }
         }
-        pos = new vscode.Position(pos.line - 1, document.lineAt(position.line - 1).text.length);
+        pos = new vscode.Position(pos.line - 1, document.lineAt(pos.line - 1).text.length);
     }
     return;
 };
