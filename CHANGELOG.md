@@ -104,3 +104,8 @@ Thanks [ItamarShDev](https://github.com/ItamarShDev) for both.
 ## [0.2.5]
 
 * Added configuration for extra arguments to pytest --fixtures, thanks [thu2004](https://github.com/thu2004)
+
+## [0.2.6]
+
+* Added typing suggestions for fixtures, thanks [thu2004](https://github.com/thu2004)
+* Fixed issue where longer test functions were not being recognized
