@@ -31,3 +31,21 @@ export async function closeAllEditors(){
 export async function undo() {
     return await vscode.commands.executeCommand("undo");
 }
+
+// determine if the array has all the items from the other array
+export function isAllElementFound(arrayToCompare: string[], arrayToBeFound : string[]) {
+    let allFounded = arrayToBeFound.every( element => {
+        const found = arrayToCompare.includes(element);
+        if (!found) {
+            console.log(`${element} not found`);
+        }
+        return found;
+    });
+    return allFounded;
+}
+
+export async function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms);
+    });
+}

@@ -22,7 +22,7 @@ const isPythonTestFile = (document: vscode.TextDocument) => {
  * Iterates backwards through the document from the given position, checking each character
  * to see if it is an open parens. Returns false if it cannot find one or discovers a closed
  * parens first.
- * 
+ *
  * @param document active text document
  * @param position position of the cursor
  * @returns location of the open parens if found, otherwise undefined
@@ -47,9 +47,9 @@ const positionOfOpenParens = (document: vscode.TextDocument, position: vscode.Po
 /**
  * Checks if the line is a pytest fixture. Will check previous lines
  * that begin with @ until it finds the `pytest.fixture` or returns False.
- * 
+ *
  * Does not support many cases, including decorators that span multiple lines.
- * 
+ *
  * @param document active text document
  * @param position position of the function definition
  * @returns if a pytest fixture was found
@@ -84,10 +84,10 @@ function isLineFunction(line: string): boolean {
  * Brittle function that checks if there is a dangling open parens before
  * the cursor and if that parens is on the same line as a function definition.
  * It also checks if that function definition is preceeded by a pytest.fixture decorator.
- * 
+ *
  * @param document active text document
  * @param position position of the cursor
- * @returns 
+ * @returns
  */
 const isWithinTestFunctionArgs = (document: vscode.TextDocument, position: vscode.Position): boolean => {
     let pos = positionOfOpenParens(document, position);
@@ -112,7 +112,7 @@ function isLineTestFunction(line: string): boolean {
 
 /**
  * Get the function name from the current line.
- * 
+ *
  * TODO: Get the relevant function name if on another line
  *
  * @param lineText line containing function definition
@@ -139,7 +139,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
 
     /**
      * Passing the context lets the provider set up its listeners.
-     * @param context 
+     * @param context
      */
     activate(context: vscode.ExtensionContext) {
         this._activated = true;
@@ -149,7 +149,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
             log(`Loading fixtures for ${vscode.window.activeTextEditor.document.fileName}`);
             this.cacheFixtures(vscode.window.activeTextEditor.document);
         }
-        
+
         context.subscriptions.push(... [
             vscode.window.onDidChangeActiveTextEditor(editor => {
                 if (shouldScanForFixtures()  && editor) {
@@ -169,7 +169,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
         context.subscriptions.push(vscode.commands.registerTextEditorCommand(command, commandHandler));
     }
 
-    
+
     private cacheFixtures = async (document: vscode.TextDocument) => {
         if (isPythonTestFile(document)) {
             const filePath = document.uri.fsPath;
@@ -183,7 +183,8 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
      * Get suggestions for the given cursor position in a document.
      * If the cursor is within the parameter section of a test function, in
      * a file with cached fixtures, provide results.
-     * 
+     * If ':' character after the fixtureName, provide the type for type annotation
+     *
      * @param document current document
      * @param position current cursor position
      * @returns list of fixtures or an empty list
@@ -191,7 +192,7 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
     private getSuggestions = (
         document: vscode.TextDocument,
         position: vscode.Position,
-    ): Fixture[] => {
+    ): vscode.CompletionItem[] => {
         log(`GetSuggestions: ${document.fileName}`);
 
         const lineText = document.lineAt(position.line).text;
@@ -199,9 +200,48 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
 
         if (this.cache[testPath]?.length &&
             isWithinTestFunctionArgs(document, position)) {
-            const functionName = getFunctionName(lineText);
-            // Avoid self-reference for fixtures
-            return this.cache[testPath].filter((fixture) => fixture.name !== functionName);
+            // is ':' character before after removing the spaces ? suggestion of type anontation
+            let pos = position.translate(0, -1).character;
+            const trimlineText = lineText.substring(0, pos+1).trim();
+            pos = trimlineText.length-1;
+            const char = lineText.charAt(pos);
+            if (char === ":") {
+                // find the parameter name / fixture name
+                const lineToSearch = lineText.substring(0, pos+1);
+                const parameters = lineToSearch.match(/(\w+)\s*:/g)?.slice(-1);
+                if (parameters?.length === 1) {
+                    const fixtureName = parameters[0].replace(":","").trim();
+                    let fixture = this.cache[testPath].find((fixture) => fixture.name === fixtureName);
+                    if (fixture?.returnType) {
+                        let item = new vscode.CompletionItem(
+                            fixture.returnType,
+                            vscode.CompletionItemKind.Snippet
+                        );
+                        return [item];
+                    }
+                    return [];
+                }
+                return [];
+            } else {
+                // Give suggestion of fixtures.
+                const functionName = getFunctionName(lineText);
+                // Avoid self-reference for fixtures
+                const fixtures = this.cache[testPath].filter((fixture) => fixture.name !== functionName);
+
+                if (fixtures.length) {
+                    return fixtures.map((fixture) => {
+                        let fixtureName = fixture.name;
+                        let item = new vscode.CompletionItem(
+                            fixtureName,
+                            vscode.CompletionItemKind.Snippet
+                        );
+                        item.detail = fixture.module;
+                        item.documentation = fixture.docstring;
+                        return item;
+                    });
+                }
+                return [];
+            }
         }
         return [];
     };
@@ -213,19 +253,8 @@ export class PytestFixtureProvider implements vscode.CompletionItemProvider, vsc
         _context: vscode.CompletionContext
     ): vscode.CompletionItem[] {
         log(`Called provideCompletionItems: ${document.fileName}, position: ${JSON.stringify(position)}`);
-        
-        const suggestions = this.getSuggestions(document, position);
-        if (suggestions.length) {
-            return suggestions.map((fixture) => {
-                let item = new vscode.CompletionItem(
-                    fixture.name,
-                    vscode.CompletionItemKind.Field
-                );
-                item.documentation = fixture.docstring;
-                return item;
-            });
-        }
-        return [];
+
+        return this.getSuggestions(document, position);
     }
 
     provideDefinition(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.Definition | vscode.LocationLink[]> {

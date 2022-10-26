@@ -1,13 +1,17 @@
+import { spawnSync } from "child_process";
 import { readFileSync } from "fs";
-import { join, isAbsolute } from "path";
+import { join, isAbsolute, sep } from "path";
 import * as vscode from "vscode";
 import { log } from "./logging";
+import { getPythonPath } from "./fixture";
 
 export interface Fixture {
     name: string;
     docstring: string;
     fileLocation?: vscode.Uri;
     range?: vscode.Range;
+    returnType?: string;
+    module?: string;
 }
 
 const FIXTURE_REGEX = /^(\w+)[ \[\]\w]* -- ([^:]+):(\d+)/i;
@@ -15,7 +19,7 @@ const FIXTURE_REGEX = /^(\w+)[ \[\]\w]* -- ([^:]+):(\d+)/i;
 /**
  * Removes the pytest information from the list of fixtures.
  * Assumes that all fixtures come before a line of `===...`.
- * 
+ *
  * @param lines input lines from pytest --fixtures
  * @returns lines without preceding or following pytest info
  */
@@ -27,16 +31,35 @@ const removeTrailingPytestInfo = (lines: string[]) => {
 };
 
 /**
+ * Find where pytest is installed and return the pip package location
+ */
+
+const findPipPackageLocation = async (resource: vscode.Uri) => {
+    let pyTestLocation = "";
+    const response = spawnSync(await getPythonPath(resource), ["-m", "pip", "show", "pytest"]);
+    if (response.status === 0) {
+        let lines = response.stdout.toString().split(/\r?\n/);
+        lines.forEach(line => {
+            // Location: /home/ctule/.local/lib/python3.8/site-packages
+            if (line.indexOf("Location: ") > -1) {
+                pyTestLocation = line.substring(10);
+            }
+        });
+    }
+    return pyTestLocation;
+};
+
+/**
  * Parses the pytest output. Makes a few assumptions:
  * 1. the fixtures are surrounded by blocks of `=====...`
  * 1. Each fixture is separated by an empty line
  * 1. Fixtures start with a letter or number
  * 1. Docstrings have at least 2 spaces
- * 
+ *
  * @param output pytest --fixtures output
  * @returns list of fixtures parsed from output
  */
-export const parsePytestOutputToFixtures = (output: string, rootDir: string) => {
+export const parsePytestOutputToFixtures = async (output: string, rootDir: string, resource: vscode.Uri) => {
     const fixtures: Fixture[] = [];
     let alreadyEncountered: Record<string, number> = {};
     let currentFilePath: string | null = null;
@@ -46,7 +69,7 @@ export const parsePytestOutputToFixtures = (output: string, rootDir: string) => 
     lines = removeTrailingPytestInfo(lines);
     // Use the rootdir defined by pytest if it's available
     const rootDirForPath = pytestRootDir ? pytestRootDir : rootDir;
-
+    const pipPackageLocation = await findPipPackageLocation(resource);
     let tmpContent: string[] | null = null;
 
     let fixture: Fixture = {
@@ -77,22 +100,40 @@ export const parsePytestOutputToFixtures = (output: string, rootDir: string) => 
             }
             const [name, linePath, line] = matches.slice(1);
             fixture = { name, docstring: "" };
-
-            const path = isAbsolute(linePath) ? linePath : join(rootDirForPath, linePath);
+            let path;
+            // check if pytest fixture
+            if (linePath.indexOf(`...${sep}_pytest`) > -1) {
+                path = linePath.replace("...", pipPackageLocation);
+            } else {
+                path = isAbsolute(linePath) ? linePath : join(rootDirForPath, linePath);
+            }
             try {
                 if (linePath !== currentFilePath) {
                     tmpContent = readFileSync(path, "utf8").split(/\r?\n/);
                     currentFilePath = linePath;
                 }
                 fixture.fileLocation = vscode.Uri.file(path);
+                const site_pos = path.indexOf("site-packages/");
+                if ( site_pos > -1) {
+                    fixture.module = path.substring(site_pos+14);
+                } else {
+                    fixture.module = path;
+                };
                 const lineInt = parseInt(line, 10) - 1;
                 if (tmpContent && lineInt < tmpContent.length) {
-                    const start = tmpContent[lineInt].indexOf(`def ${fixture.name}(`) + 4;
+                    let line = tmpContent[lineInt];
+                    const start = line.indexOf(`def ${fixture.name}(`) + 4;
                     const end = start + fixture.name.length;
                     fixture.range = new vscode.Range(
                         new vscode.Position(lineInt, start),
                         new vscode.Position(lineInt, end)
                     );
+                    // def fixture_with_type_hinting() -> str:
+                    if (line.indexOf("->") > 0) {
+                        let returnType = line.split("->")[1];
+                        returnType = returnType.replace(":","").trim();
+                        fixture.returnType = returnType;
+                    }
                 }
             } catch (error) {
                 log(`Unable to read file at path ${path}, ${error}`);
