@@ -74,7 +74,7 @@
     "@typescript-eslint/parser": "^5.12.0",
     "eslint": "^7.24.0",
     "glob": "^7.1.6",
-    "mocha": "^9.0.0",
+    "mocha": "^9.2.2",
     "python-shell": "^3.0.1",
     "sinon": "^10.0.0",
     "ts-loader": "^8.0.14",
