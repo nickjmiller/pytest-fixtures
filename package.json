@@ -49,6 +49,11 @@
           "type": "array",
           "default": [],
           "description": "Extra arguments for pytest --fixtures command"
+        },
+        "pytest-fixtures.additionalDecorators": {
+          "type": "array",
+          "default": [],
+          "description": "Other fixture decorators to recognize in addition to `pytest.fixture`"
         }
       }
     }

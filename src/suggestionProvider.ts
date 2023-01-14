@@ -60,6 +60,10 @@ const isPytestFixture = (document: vscode.TextDocument, position: vscode.Positio
         return false;
     }
 
+    const additionalDecorators: [string] | undefined = vscode.workspace
+        .getConfiguration("pytest-fixtures")
+        .get("additionalDecorators");
+
     let pos = position.translate(-1);
     while (pos.line >= 0 && !document.lineAt(pos).isEmptyOrWhitespace) {
         const line = document.lineAt(pos).text;
@@ -68,6 +72,11 @@ const isPytestFixture = (document: vscode.TextDocument, position: vscode.Positio
             return false;
         }
         if (line.includes("pytest.fixture")) {
+            return true;
+        }
+        if (additionalDecorators
+            && additionalDecorators.length
+            && additionalDecorators.filter(decorator => line.includes(decorator))) {
             return true;
         }
         pos = pos.translate(-1);
