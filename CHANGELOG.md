@@ -113,3 +113,7 @@ Thanks [ItamarShDev](https://github.com/ItamarShDev) for both.
 ## [0.2.7]
 
 * Added a new setting to add additional decorators to recognize when scanning for fixtures
+
+## [0.2.8]
+
+* Fixed an issue introduced in 0.2.7

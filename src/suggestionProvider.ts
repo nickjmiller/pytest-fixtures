@@ -76,7 +76,7 @@ const isPytestFixture = (document: vscode.TextDocument, position: vscode.Positio
         }
         if (additionalDecorators
             && additionalDecorators.length
-            && additionalDecorators.filter(decorator => line.includes(decorator))) {
+            && additionalDecorators.filter(decorator => line.includes(decorator)).length) {
             return true;
         }
         pos = pos.translate(-1);
