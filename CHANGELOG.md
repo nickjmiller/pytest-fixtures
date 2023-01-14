@@ -109,3 +109,7 @@ Thanks [ItamarShDev](https://github.com/ItamarShDev) for both.
 
 * Added typing suggestions for fixtures, thanks [thu2004](https://github.com/thu2004)
 * Fixed issue where longer test functions were not being recognized
+
+## [0.2.7]
+
+* Added a new setting to add additional decorators to recognize when scanning for fixtures
