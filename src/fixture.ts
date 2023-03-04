@@ -21,6 +21,15 @@ export const getPythonPath = async (resource: vscode.Uri) => {
     return pythonPath[0];
 };
 
+const getWorkspaceDir = (document: vscode.TextDocument) => {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders) {
+        return;
+    }
+    return workspaceFolders
+        .find(folder => document.uri.fsPath.startsWith(folder.uri.fsPath))?.uri.fsPath;
+};
+
 /**
  * Pytest provides different fixtures for different files, based on
  * hierarchy and context. We use the current python interpreter to
@@ -39,7 +48,14 @@ export const getFixtures = async (document: vscode.TextDocument) => {
     if (extraArgs && extraArgs.length) {
         args = args.concat(args, extraArgs);
     }
-    const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || dirname(document.uri.fsPath);
+    let cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || dirname(document.uri.fsPath);
+
+    if (vscode.workspace.getConfiguration("pytest-fixtures", document.uri).get("useFileWorkspaceFolder")) {
+        const workspaceDir = getWorkspaceDir(document);
+        if (workspaceDir) {
+            cwd = workspaceDir;
+        }
+    }
     const pytestPath: string = vscode.workspace
         .getConfiguration("python.testing", document.uri)
         .get("pytestPath") || "pytest";
