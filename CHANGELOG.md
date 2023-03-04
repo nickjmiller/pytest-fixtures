@@ -117,3 +117,7 @@ Thanks [ItamarShDev](https://github.com/ItamarShDev) for both.
 ## [0.2.8]
 
 * Fixed an issue introduced in 0.2.7
+
+## [0.2.9]
+
+* Added experimental flag to support better fixture detection in multi-root workspaces.
