@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.0]
+
+* Set experimental flag for multi-root workspaces to be on by default
+
 ## [0.2.9]
 
 * Added experimental flag to support better fixture detection in multi-root workspaces.
