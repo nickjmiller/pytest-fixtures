@@ -46,7 +46,7 @@
         },
         "pytest-fixtures.useFileWorkspaceFolder": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Experimental: use the workspace folder of the selected file to scan for fixtures"
         },
         "pytest-fixtures.extraArguments": {
