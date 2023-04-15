@@ -50,11 +50,9 @@ export const getFixtures = async (document: vscode.TextDocument) => {
     }
     let cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || dirname(document.uri.fsPath);
 
-    if (vscode.workspace.getConfiguration("pytest-fixtures", document.uri).get("useFileWorkspaceFolder")) {
-        const workspaceDir = getWorkspaceDir(document);
-        if (workspaceDir) {
-            cwd = workspaceDir;
-        }
+    const workspaceDir = getWorkspaceDir(document);
+    if (workspaceDir) {
+        cwd = workspaceDir;
     }
     const pytestPath: string = vscode.workspace
         .getConfiguration("python.testing", document.uri)

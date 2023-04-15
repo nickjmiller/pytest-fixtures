@@ -44,11 +44,6 @@
           "default": true,
           "description": "Scan current file for pytest fixtures on file change"
         },
-        "pytest-fixtures.useFileWorkspaceFolder": {
-          "type": "boolean",
-          "default": true,
-          "description": "Experimental: use the workspace folder of the selected file to scan for fixtures"
-        },
         "pytest-fixtures.extraArguments": {
           "type": "array",
           "default": [],

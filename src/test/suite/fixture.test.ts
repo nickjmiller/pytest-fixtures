@@ -47,43 +47,16 @@ suite("Fixture Unit Test Suite", () => {
             ]);
         });
 
-        afterEach(() => {
-            (vscode.workspace.getConfiguration as SinonStub).restore();
-        });
-
         test("should get fixtures", async () => {
             parseFixtureStub.returnsArg(0);
-            sandbox.stub(vscode.workspace, "getConfiguration").returns({
-                get: () => {
-                    return false;
-                },
-            } as any);
             assert.strictEqual(
                 await getFixtures({ uri: docPath } as any),
                 "output"
             );
         });
 
-        test("should use cwd for working directory", async () => {
+        test("should use file directory for working directory", async () => {
             parseFixtureStub.returnsArg(1);
-            sandbox.stub(vscode.workspace, "getConfiguration").returns({
-                get: () => {
-                    return false;
-                },
-            } as any);
-            assert.strictEqual(
-                await getFixtures({ uri: docPath } as any),
-                rootPath.fsPath
-            );
-        });
-
-        test("should use file directory for working directory when enabled", async () => {
-            parseFixtureStub.returnsArg(1);
-            sandbox.stub(vscode.workspace, "getConfiguration").returns({
-                get: () => {
-                    return true;
-                },
-            } as any);
             assert.strictEqual(
                 await getFixtures({ uri: docPath } as any),
                 higherPath.fsPath
