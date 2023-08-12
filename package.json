@@ -2,7 +2,7 @@
   "name": "pytest-fixtures",
   "displayName": "pytest-fixtures",
   "description": "Pytest fixtures support for vscode",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "engines": {
     "vscode": "^1.54.0"
   },

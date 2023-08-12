@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.1]
+
+* Fixed issue with duplicate args sent to pytest, thanks [jxramos](https://github.com/jxramos)
+
 ## [0.3.0]
 
 * Set experimental flag for multi-root workspaces to be on by default
