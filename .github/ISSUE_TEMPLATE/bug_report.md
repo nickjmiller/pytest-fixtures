@@ -7,6 +7,8 @@ assignees: nickjmiller
 
 ---
 
+# This extension is obsolete, expect minimal support for bug reports.
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
