@@ -46,7 +46,7 @@ export const getFixtures = async (document: vscode.TextDocument) => {
         .get("extraArguments");
 
     if (extraArgs && extraArgs.length) {
-        args = args.concat(args, extraArgs);
+        args = args.concat(extraArgs);
     }
     let cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || dirname(document.uri.fsPath);
 
