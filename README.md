@@ -2,7 +2,7 @@
 
 VSCode extension to provide intellisense for Pytest Fixtures. Inspired by [pytest-vscode](https://github.com/cameronmaske/pytest-vscode). Uses `pytest --fixtures` to get fixture information.
 
-> **NOTE**: This extension is now obsolete, pylance includes pytest fixture detection as of Visual Studio Code version [1.7.6](https://code.visualstudio.com/updates/v1_76#_improved-intellisense-support-for-pytest).
+> #  **NOTE**: This extension is now obsolete, Pylance includes pytest fixture detection as of Visual Studio Code version [1.7.6](https://code.visualstudio.com/updates/v1_76#_improved-intellisense-support-for-pytest).
 
 ## Demo
 

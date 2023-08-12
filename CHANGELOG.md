@@ -1,5 +1,9 @@
 # Change Log
 
+## [0.3.2]
+
+Update README to suggest using Pylance's built-in fixture detection instead.
+
 ## [0.3.1]
 
 * Fixed issue with duplicate args sent to pytest, thanks [jxramos](https://github.com/jxramos)
