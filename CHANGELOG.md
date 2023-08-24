@@ -2,6 +2,10 @@
 
 ## [0.3.2]
 
+Another minor README update.
+
+## [0.3.2]
+
 Update README to suggest using Pylance's built-in fixture detection instead.
 
 ## [0.3.1]
